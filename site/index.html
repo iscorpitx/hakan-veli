@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Maaş ve Zam Hesaplama 2026 | Net Maaş, Emekli, Öğretmen Maaşı</title>
+<meta name="description" content="2026 brütten nete maaş, asgari ücret, SSK/Bağ-Kur emekli zammı, öğretmen maaşı, kıdem ve ihbar tazminatı hesaplama. Gerçek bordrolarla kuruşu kuruşuna doğrulanmış, ücretsiz ve açık kaynak.">
+<meta property="og:title" content="Maaş ve Zam Hesaplama 2026">
+<meta property="og:description" content="Net maaş, asgari ücret, emekli zammı, öğretmen maaşı, kıdem-ihbar. Gerçek bordrolarla doğrulanmış, ücretsiz.">
+<style>
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --text: #16181d; --muted: #5d6573; --line: #e2e5ea;
+  --accent: #0b6e4f; --accent-soft: #e3f3ec; --warn: #8a5a00; --warn-soft: #fff4dc; --err: #b3261e;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111317; --panel: #1a1d23; --text: #eceef2; --muted: #a2a9b6; --line: #2c3139;
+    --accent: #4fc79b; --accent-soft: #173229; --warn: #f0c060; --warn-soft: #33290f; --err: #ff8a80;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111317; --panel: #1a1d23; --text: #eceef2; --muted: #a2a9b6; --line: #2c3139;
+  --accent: #4fc79b; --accent-soft: #173229; --warn: #f0c060; --warn-soft: #33290f; --err: #ff8a80;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+h1 { font-size: 1.6rem; margin: 0 0 4px; }
+.lead { color: var(--muted); margin: 0 0 16px; }
+.durum { font-size: .9rem; padding: 8px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--warn); margin-bottom: 16px; }
+.durum.hazir { background: var(--accent-soft); color: var(--accent); }
+nav { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; }
+nav button { flex: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); padding: 8px 14px; border-radius: 999px; font: inherit; font-size: .95rem; cursor: pointer; }
+nav button[aria-selected="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+section.sekme { display: none; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px; }
+section.sekme.aktif { display: block; }
+h2 { font-size: 1.2rem; margin: 0 0 12px; }
+.alanlar { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--muted); }
+label.kutu { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
+input, select { font: inherit; padding: 9px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--text); min-width: 0; }
+input[type="checkbox"] { width: 18px; height: 18px; }
+button.hesapla { margin-top: 14px; background: var(--accent); color: #fff; border: 0; border-radius: 8px; padding: 10px 20px; font: inherit; font-weight: 600; cursor: pointer; }
+button.hesapla:disabled { opacity: .5; cursor: wait; }
+.sonuc { margin-top: 18px; }
+.buyuk { font-size: 1.8rem; font-weight: 700; color: var(--accent); margin: 4px 0 12px; }
+table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+td, th { padding: 7px 4px; border-bottom: 1px solid var(--line); text-align: left; }
+td.tutar, th.tutar { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.toplam td { font-weight: 700; }
+.not { font-size: .85rem; color: var(--muted); margin-top: 10px; }
+.hata { color: var(--err); margin-top: 12px; }
+.tablo-kaydir { overflow-x: auto; }
+footer { margin-top: 28px; font-size: .85rem; color: var(--muted); }
+footer a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Maaş ve Zam Hesaplama 2026</h1>
+  <p class="lead">Net maaş, asgari ücret, emekli zammı, öğretmen maaşı ve kıdem-ihbar. Hesaplar gerçek bordrolarla kuruşu kuruşuna doğrulandı.</p>
+  <div class="durum" id="durum">Hesap motoru yükleniyor… (ilk açılışta 5-10 saniye sürebilir)</div>
+
+  <nav role="tablist">
+    <button role="tab" data-sekme="maas" aria-selected="true">Net maaş</button>
+    <button role="tab" data-sekme="asgari">Asgari ücret</button>
+    <button role="tab" data-sekme="emekli">Emekli zammı</button>
+    <button role="tab" data-sekme="ogretmen">Öğretmen maaşı</button>
+    <button role="tab" data-sekme="kidem">Kıdem ve ihbar</button>
+  </nav>
+
+  <section class="sekme aktif" id="maas">
+    <h2>Brütten nete / netten brüte maaş</h2>
+    <form data-islem="maas">
+      <div class="alanlar">
+        <label>Yön <select name="yon"><option value="brut">Brüt biliyorum → net</option><option value="net">Net biliyorum → brüt</option></select></label>
+        <label>Tutar (TL) <input name="tutar" type="number" step="0.01" min="0" value="50000" required></label>
+        <label>Ay <select name="ay"></select></label>
+        <label>Engellilik <select name="engellilik"><option value="">Yok</option><option value="1">1. derece</option><option value="2">2. derece</option><option value="3">3. derece</option></select></label>
+        <label>Sendika aidatı (TL) <input name="sendika" type="number" step="0.01" min="0" value="0"></label>
+        <label class="kutu"><input type="checkbox" name="sgdp"> Emekliyim, çalışıyorum (SGDP)</label>
+        <label class="kutu"><input type="checkbox" name="bes"> BES kesintisi var</label>
+      </div>
+      <button class="hesapla" type="submit" disabled>Hesapla</button>
+    </form>
+    <div class="sonuc"></div>
+  </section>
+
+  <section class="sekme" id="asgari">
+    <h2>Asgari ücret ve zam senaryoları</h2>
+    <form data-islem="asgari">
+      <div class="alanlar">
+        <label>Zam senaryoları (%) <input name="oranlar" value="20, 25, 30, 35"></label>
+      </div>
+      <button class="hesapla" type="submit" disabled>Hesapla</button>
+    </form>
+    <div class="sonuc"></div>
+  </section>
+
+  <section class="sekme" id="emekli">
+    <h2>SSK / Bağ-Kur emekli zammı</h2>
+    <form data-islem="emekli">
+      <div class="alanlar">
+        <label>Şu an elinize geçen aylık (TL) <input name="aylik" type="number" step="0.01" min="0" value="21000" required></label>
+        <label>Dönem <select name="donem"><option value="2026-07">Temmuz 2026</option><option value="2026-01">Ocak 2026</option></select></label>
+        <label>Asıl aylık (en düşük aylık desteği alıyorsanız) <input name="asil" type="number" step="0.01" min="0" placeholder="Boş bırakabilirsiniz"></label>
+      </div>
+      <button class="hesapla" type="submit" disabled>Hesapla</button>
+    </form>
+    <div class="sonuc"></div>
+  </section>
+
+  <section class="sekme" id="ogretmen">
+    <h2>Öğretmen maaşı (kalem kalem)</h2>
+    <form data-islem="ogretmen">
+      <div class="alanlar">
+        <label>Derece <select name="derece"></select></label>
+        <label>Kademe <select name="kademe"></select></label>
+        <label>Hizmet yılı (bordrodaki kıdem) <input name="yil" type="number" min="0" max="45" value="10"></label>
+        <label>Kariyer <select name="kariyer"><option value="">Öğretmen</option><option value="uzman">Uzman öğretmen</option><option value="basogretmen">Başöğretmen</option></select></label>
+        <label>Göreve başlama <select name="emeklilik"><option value="5510">2008 ve sonrası (SGK)</option><option value="5434">2008 öncesi (Emekli Sandığı)</option></select></label>
+        <label>Ay <select name="ay"></select></label>
+        <label>6 yaş altı çocuk <input name="kucuk" type="number" min="0" max="10" value="0"></label>
+        <label>6 yaş üstü çocuk <input name="buyuk" type="number" min="0" max="10" value="0"></label>
+        <label>Sendika aidatı (TL) <input name="sendika" type="number" step="0.01" min="0" value="0"></label>
+        <label class="kutu"><input type="checkbox" name="es"> Eşim çalışmıyor</label>
+        <label class="kutu"><input type="checkbox" name="bes"> BES kesintisi var</label>
+      </div>
+      <button class="hesapla" type="submit" disabled>Hesapla</button>
+    </form>
+    <div class="sonuc"></div>
+  </section>
+
+  <section class="sekme" id="kidem">
+    <h2>Kıdem ve ihbar tazminatı</h2>
+    <form data-islem="kidem">
+      <div class="alanlar">
+        <label>İşe giriş tarihi <input name="giris" type="date" value="2019-03-01" required></label>
+        <label>Çıkış tarihi <input name="cikis" type="date" value="2026-09-30" required></label>
+        <label>Giydirilmiş brüt ücret (TL) <input name="brut" type="number" step="0.01" min="0" value="55000" required></label>
+      </div>
+      <p class="not">Giydirilmiş brüt: son brüt ücret + düzenli yan ödemeler (yemek, yol, ikramiyenin aylık payı).</p>
+      <button class="hesapla" type="submit" disabled>Hesapla</button>
+    </form>
+    <div class="sonuc"></div>
+  </section>
+
+  <footer>
+    <p>Sonuçlar bilgilendirme amaçlıdır, resmi bordro veya SGK hesabı yerine geçmez. Hesaplar tarayıcınızda yapılır, girdiğiniz bilgiler hiçbir yere gönderilmez.</p>
+    <p>Açık kaynak: <a href="https://github.com/iscorpitx/hakan-veli">github.com/iscorpitx/hakan-veli</a> · Claude ile kullanmak için: <code>uvx zam-hesap-mcp</code></p>
+  </footer>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v0.29.5/full/pyodide.js"></script>
+<script>
+const AYLAR = ["Ocak","Şubat","Mart","Nisan","Mayıs","Haziran","Temmuz","Ağustos","Eylül","Ekim","Kasım","Aralık"];
+const TL = new Intl.NumberFormat("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const tl = (x) => TL.format(x === 0 ? 0 : x) + " TL";  // -0 yerine 0
+const $ = (s, el = document) => el.querySelector(s);
+
+// Ay seçimleri: bugünün ayı seçili
+const buAy = new Date().getMonth() + 1;
+document.querySelectorAll('select[name="ay"]').forEach((s) => {
+  AYLAR.forEach((a, i) => s.add(new Option(a + " 2026", i + 1, false, i + 1 === buAy)));
+});
+
+// Sekmeler
+document.querySelectorAll("nav button").forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll("nav button").forEach((x) => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("section.sekme").forEach((s) => s.classList.toggle("aktif", s.id === b.dataset.sekme));
+  try { localStorage.setItem("sekme", b.dataset.sekme); } catch (e) {}
+}));
+try { const s = localStorage.getItem("sekme"); if (s) $(`nav button[data-sekme="${s}"]`)?.click(); } catch (e) {}
+
+let py = null;
+const KOPRU = `
+import json
+from zam_hesap import maas, emekli, memur_maas, is_hukuku
+from zam_hesap.parametreler import yukle
+
+def calistir(ad, girdi):
+    g = json.loads(girdi)
+    f = {
+        "brutten_nete": maas.brutten_nete, "netten_brute": maas.netten_brute,
+        "asgari_ucret": maas.asgari_ucret, "asgari_ucret_senaryosu": maas.asgari_ucret_senaryosu,
+        "emekli_zammi": emekli.emekli_zammi, "memur_maasi": memur_maas.memur_maasi,
+        "kidem_tazminati": is_hukuku.kidem_tazminati, "ihbar_tazminati": is_hukuku.ihbar_tazminati,
+    }[ad]
+    try:
+        return json.dumps({"sonuc": f(**g)})
+    except ValueError as e:
+        return json.dumps({"hata": str(e)})
+
+def gosterge_tablosu():
+    return json.dumps(yukle(2026)["memur_maasi"]["gosterge_tablosu"])
+`;
+
+function cagir(ad, girdi) {
+  const r = JSON.parse(py.globals.get("calistir")(ad, JSON.stringify(girdi)));
+  if (r.hata) throw new Error(r.hata);
+  return r.sonuc;
+}
+
+function tablo(satirlar, basliklar) {
+  const bas = basliklar ? `<tr>${basliklar.map((h, i) => `<th class="${i ? "tutar" : ""}">${h}</th>`).join("")}</tr>` : "";
+  const govde = satirlar.map(([ad, ...deger]) => {
+    const toplam = ad.startsWith("=");
+    return `<tr class="${toplam ? "toplam" : ""}"><td>${toplam ? ad.slice(1) : ad}</td>${deger.map((v) => `<td class="tutar">${typeof v === "number" ? tl(v) : v}</td>`).join("")}</tr>`;
+  }).join("");
+  return `<div class="tablo-kaydir"><table>${bas}${govde}</table></div>`;
+}
+
+const ISLEMLER = {
+  maas(v) {
+    const ortak = { ay: +v.ay, yil: 2026, sgdp: v.sgdp, bes: v.bes, sendika_aidati: +v.sendika || 0,
+      engellilik_derecesi: v.engellilik ? +v.engellilik : null };
+    const b = v.yon === "brut" ? cagir("brutten_nete", { brut: +v.tutar, ...ortak }) : cagir("netten_brute", { net: +v.tutar, ...ortak });
+    const satir = [["Brüt ücret", b.brut], [b.sgdp ? "SGDP işçi payı (%7,5)" : "SGK işçi payı (%14)", -b.sgk_isci], ["İşsizlik sigortası (%1)", -b.issizlik_isci],
+      ["Gelir vergisi", -b.odenecek_gelir_vergisi], ["Damga vergisi", -b.odenecek_damga_vergisi]];
+    if (b.bes_kesintisi) satir.push(["BES", -b.bes_kesintisi]);
+    if (b.sendika_aidati) satir.push(["Sendika aidatı", -b.sendika_aidati]);
+    satir.push(["=Net ücret", b.net]);
+    return `<div>${AYLAR[b.ay - 1]} 2026 net ücret</div><div class="buyuk">${tl(b.net)}</div>` + tablo(satir) +
+      `<p class="not">Gelir vergisi matrahı ${tl(b.gelir_vergisi_matrahi)}, asgari ücret vergi istisnası ${tl(b.gelir_vergisi_istisnasi)}. Yılbaşından beri aynı brüt ücret varsayılmıştır.</p>`;
+  },
+  asgari(v) {
+    const a = cagir("asgari_ucret", { yil: 2026 });
+    const oranlar = v.oranlar.split(/[,; ]+/).map((x) => parseFloat(x.replace(",", "."))).filter((x) => !isNaN(x));
+    let html = `<div>2026 asgari ücret (net)</div><div class="buyuk">${tl(a.net)}</div>` +
+      tablo([["Brüt", a.brut], ["SGK + işsizlik", -(a.sgk_isci + a.issizlik_isci)], ["=Net", a.net],
+        ["İşverene maliyet (teşviksiz)", a.isveren_maliyeti.yok], ["İşverene maliyet (imalat dışı, 2 puan)", a.isveren_maliyeti.genel], ["İşverene maliyet (imalat, 5 puan)", a.isveren_maliyeti.imalat]]);
+    if (oranlar.length) {
+      const s = cagir("asgari_ucret_senaryosu", { zam_oranlari_yuzde: oranlar, yil: 2026 });
+      html += `<h2 style="margin-top:18px">Zam gelirse</h2>` + tablo(s.senaryolar.map((x) => ["%" + x.zam_orani_yuzde, x.brut, x.net, "+" + tl(x.net_artis)]), ["Zam", "Brüt", "Net", "Net artış"]) + `<p class="not">${s.not}</p>`;
+    }
+    return html;
+  },
+  emekli(v) {
+    const e = cagir("emekli_zammi", { mevcut_aylik: +v.aylik, donem: v.donem, asil_aylik: v.asil ? +v.asil : null });
+    const satir = [["Mevcut aylık", e.mevcut_aylik]];
+    if (e.asil_aylik) satir.push(["Asıl (desteksiz) aylık", e.asil_aylik]);
+    satir.push(["Zam oranı", "%" + String(e.zam_orani_yuzde).replace(".", ",")], ["Zamlı aylık", e.zamli_aylik], ["En düşük emekli aylığı", e.en_dusuk_aylik], ["=Ödenecek tutar", e.odenecek_tutar], ["Gerçek artış", e.gercek_artis]);
+    return `<div>Zamdan sonra elinize geçecek</div><div class="buyuk">${tl(e.odenecek_tutar)}</div>` + tablo(satir) + (e.not ? `<p class="not">${e.not}</p>` : "");
+  },
+  ogretmen(v) {
+    const m = cagir("memur_maasi", { derece: +v.derece, kademe: +v.kademe, hizmet_yili: +v.yil, kariyer: v.kariyer || null,
+      emeklilik: v.emeklilik, es_calismiyor: v.es, cocuk_72_ay_alti: +v.kucuk, cocuk_72_ay_ustu: +v.buyuk, ay: +v.ay, yil: 2026,
+      sendika_aidati: +v.sendika || 0, bes: v.bes });
+    const ad = { gosterge_ayligi: "Gösterge aylığı", ek_gosterge_ayligi: "Ek gösterge aylığı", taban_ayligi: "Taban aylık", kidem_ayligi: "Kıdem aylığı",
+      yan_odeme: "Yan ödeme", ozel_hizmet_tazminati: "Özel hizmet tazminatı", ek_odeme: "Ek ödeme (666 KHK)", ilave_odeme: "İlave ödeme",
+      kariyer_tazminati: "Uzman/başöğretmen tazminatı", es_yardimi: "Aile yardımı (eş)", cocuk_yardimi: "Çocuk yardımı",
+      malulluk_yaslilik: "Malullük-yaşlılık (%9)", gss: "Genel sağlık sigortası (%5)", emekli_kesenegi: "Emekli keseneği (%16)",
+      gelir_vergisi: "Gelir vergisi", damga_vergisi: "Damga vergisi", bes: "BES", sendika_aidati: "Sendika aidatı" };
+    const kazanc = Object.entries({ ...m.kazanclar, ...m.yardimlar }).filter(([, x]) => x).map(([k, x]) => [ad[k], x]);
+    const kesinti = Object.entries(m.kesintiler).filter(([, x]) => x).map(([k, x]) => [ad[k], -x]);
+    return `<div>${m.unvan}, ${m.derece_kademe}, ${AYLAR[m.ay - 1]} 2026 net maaş</div><div class="buyuk">${tl(m.net)}</div>` +
+      tablo([...kazanc, ["=Toplam kazanç", m.toplam_kazanc], ...kesinti, ["=Net maaş", m.net]]) +
+      `<p class="not">Gelir vergisi matrahı ${tl(m.gelir_vergisi_matrahi)}. ${m.not} Yılbaşından beri aynı maaş varsayılmıştır.</p>`;
+  },
+  kidem(v) {
+    const k = cagir("kidem_tazminati", { giydirilmis_brut: +v.brut, giris: v.giris, cikis: v.cikis });
+    const i = cagir("ihbar_tazminati", { giydirilmis_brut: +v.brut, giris: v.giris, cikis: v.cikis });
+    const s = k.hizmet_suresi;
+    return `<div>Kıdem + ihbar (net)</div><div class="buyuk">${tl(k.net_tazminat + i.net_tazminat)}</div>` +
+      tablo([["Çalışma süresi", `${s.yil} yıl ${s.ay} ay ${s.gun} gün`], ["Kıdem tavanı", k.tavan], ["Kıdem tazminatı (brüt)", k.brut_tazminat],
+        ["Damga vergisi", -k.damga_vergisi], ["=Net kıdem tazminatı", k.net_tazminat], [`İhbar süresi`, `${i.ihbar_suresi_hafta} hafta`],
+        ["İhbar tazminatı (brüt)", i.brut_tazminat], ["Gelir + damga vergisi", -(i.gelir_vergisi + i.damga_vergisi)], ["=Net ihbar tazminatı", i.net_tazminat]]) +
+      `<p class="not">${k.not || ""} Tazminat hakkının doğup doğmadığı (istifa, haklı fesih vb.) değerlendirilmez. İhbar vergisi %15 dilim varsayımıyla hesaplanmıştır.</p>`;
+  },
+};
+
+document.querySelectorAll("form").forEach((form) => form.addEventListener("submit", (ev) => {
+  ev.preventDefault();
+  const v = {};
+  new FormData(form).forEach((x, k) => (v[k] = x));
+  form.querySelectorAll('input[type="checkbox"]').forEach((c) => (v[c.name] = c.checked));
+  const kutu = $(".sonuc", form.parentElement);
+  try { kutu.innerHTML = ISLEMLER[form.dataset.islem](v); }
+  catch (e) { kutu.innerHTML = `<p class="hata">${e.message}</p>`; }
+}));
+
+(async () => {
+  const durum = $("#durum");
+  try {
+    py = await loadPyodide();
+    await py.loadPackage(["micropip", "pyyaml"]);
+    await py.runPythonAsync(`import micropip\nawait micropip.install("zam-hesap-mcp>=0.6.0", deps=False)`);
+    py.runPython(KOPRU);
+    // Öğretmen formu: derece/kademe listeleri gösterge tablosundan
+    const g = JSON.parse(py.globals.get("gosterge_tablosu")());
+    const d = $('#ogretmen select[name="derece"]'), k = $('#ogretmen select[name="kademe"]');
+    Object.keys(g).forEach((x) => d.add(new Option(x, x, false, x === "7")));
+    const kademeler = () => { k.innerHTML = ""; g[d.value].forEach((_, i) => k.add(new Option(i + 1, i + 1))); };
+    d.addEventListener("change", kademeler); kademeler();
+    const surum = py.runPython("import importlib.metadata as m; m.version('zam-hesap-mcp')");
+    durum.textContent = `Hazır ✓ (hesap motoru sürüm ${surum})`;
+    durum.classList.add("hazir");
+    document.querySelectorAll("button.hesapla").forEach((b) => (b.disabled = false));
+  } catch (e) {
+    durum.textContent = "Hesap motoru yüklenemedi. Sayfayı yenileyin. (" + e.message + ")";
+  }
+})();
+</script>
+</body>
+</html>

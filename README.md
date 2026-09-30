@@ -6,6 +6,8 @@
 
 Türkiye'de maaş, asgari ücret, emekli ve memur zammı, kıdem-ihbar tazminatı, yıllık izin ve fazla mesai hesaplarını yapan bir [MCP](https://modelcontextprotocol.io) sunucusu. Claude Desktop, Claude Code, Cursor ve MCP destekleyen diğer yapay zekâ asistanlarıyla çalışır.
 
+> 🌐 **Kurulum gerektirmeyen web sürümü:** [iscorpitx.github.io/hakan-veli](https://iscorpitx.github.io/hakan-veli/). Aynı hesap motoru tarayıcıda çalışır.
+
 > ⚠️ Sonuçlar bilgilendirme amaçlıdır, resmi bordro veya SGK hesabı yerine geçmez.
 
 ## Neden?
@@ -162,6 +164,13 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 - [x] Engellilik indirimi, BES, SGDP (emekli çalışan)
 - [ ] 2027 parametreleri (Ocak 2027'de)
 - [x] PyPI yayını (`uvx zam-hesap-mcp`)
+
+## Web sürümü
+
+`site/index.html` tek dosyalık bir sayfadır. [Pyodide](https://pyodide.org) ile tarayıcıda Python çalıştırır ve PyPI'deki
+`zam-hesap-mcp` paketini yükler; yani hesaplar MCP sunucusuyla birebir aynı koddan gelir ve yeni bir PyPI sürümü
+yayımlandığında site de kendiliğinden güncellenir. Girilen bilgiler hiçbir sunucuya gönderilmez.
+`main` dalında `site/` değişince `.github/workflows/pages.yml` sayfayı GitHub Pages'e yayımlar.
 
 ## Geliştirme
 
