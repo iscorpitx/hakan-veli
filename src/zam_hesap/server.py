@@ -29,6 +29,7 @@ def brutten_nete(
     sgdp: bool = False,
     engellilik_derecesi: int | None = None,
     bes: bool = False,
+    sendika_aidati: float = 0,
 ) -> dict[str, Any]:
     """Aylık brüt ücretten net ücreti hesaplar (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası).
 
@@ -44,8 +45,11 @@ def brutten_nete(
     sgdp: emekli olup çalışıyorsa true (SGK yerine %7,5 SGDP, işsizlik primi yok).
     engellilik_derecesi: 1, 2 veya 3 (aylık engellilik indirimi gelir vergisi matrahından düşülür).
     bes: otomatik katılım BES kesintisi varsa true (%3, netten düşülür).
+    sendika_aidati: aylık sendika aidatı (TL); gelir vergisi matrahından düşülür ve netten kesilir.
     """
-    return maas.brutten_nete(brut, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
+    return maas.brutten_nete(
+        brut, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes, sendika_aidati
+    )
 
 
 @mcp.tool()
@@ -58,6 +62,7 @@ def netten_brute(
     sgdp: bool = False,
     engellilik_derecesi: int | None = None,
     bes: bool = False,
+    sendika_aidati: float = 0,
 ) -> dict[str, Any]:
     """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur.
 
@@ -66,8 +71,11 @@ def netten_brute(
     sgdp: emekli olup çalışıyorsa true (SGK yerine %7,5 SGDP, işsizlik primi yok).
     engellilik_derecesi: 1, 2 veya 3 (aylık engellilik indirimi gelir vergisi matrahından düşülür).
     bes: otomatik katılım BES kesintisi varsa true (%3, netten düşülür).
+    sendika_aidati: aylık sendika aidatı (TL); gelir vergisi matrahından düşülür ve netten kesilir.
     """
-    return maas.netten_brute(net, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
+    return maas.netten_brute(
+        net, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes, sendika_aidati
+    )
 
 
 @mcp.tool()
