@@ -83,18 +83,21 @@ claude mcp add zam-hesap -- uvx --from git+https://github.com/iscorpitx/hakan-ve
 
 ## Gerçek bordroyla doğrulama
 
-Hesaplar gerçek bir işyeri bordrosuyla (Kasım 2023) kalem kalem karşılaştırılmıştır:
+Hesaplar gerçek işyeri bordrolarıyla kalem kalem karşılaştırılmıştır (yalnızca tutarlar):
 
-| Kalem | Bordro | zam-hesap |
-|---|---|---|
-| SGK işçi | 2.845,96 | 2.845,96 |
-| İşsizlik işçi | 203,28 | 203,28 |
-| Gelir vergisi (istisna sonrası) | 1.882,87 | 1.882,87 |
-| Damga vergisi (istisna sonrası) | 52,47 | 52,47 |
-| **Net ödenecek** | **15.343,72** | **15.343,72** |
+| Kalem | Kasım 2023 bordro | zam-hesap | Ağustos 2026 bordro | zam-hesap |
+|---|---|---|---|---|
+| SGK işçi | 2.845,96 | 2.845,96 | 7.713,16 | 7.713,16 |
+| İşsizlik işçi | 203,28 | 203,28 | 550,94 | 550,94 |
+| Gelir vergisi (istisna sonrası) | 1.882,87 | 1.882,87 | 2.762,46 | 2.762,46 |
+| Damga vergisi (istisna sonrası) | 52,47 | 52,47 | 167,46 | 167,46 |
+| **Net ödenecek** | **15.343,72** | **15.343,72** | **43.900,00** | **43.900,00** |
 
-Kendi bordronuzu kontrol etmek için `brutten_nete` aracına bordrodaki ücret kazançları toplamını, ayı ve
-`onceki_kumulatif_matrah` olarak "kümülatif gelir vergisi matrahı − bu ayın gelir vergisi matrahı" değerini verin.
+Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
+- `brut`: bordrodaki **SGK matrahı** (ücret + yol parası gibi SGK'ya tabi ödemeler; ayni yemek hariç)
+- `ay` ve `yil`
+- `onceki_kumulatif_matrah`: "kümülatif gelir vergisi matrahı − bu ayın gelir vergisi matrahı"
+- `gv_istisna_tutari`: gelir vergisi matrahı "SGK matrahı − SGK işçi − işsizlik işçi"den düşükse aradaki fark (ör. yol yardımı istisnası)
 
 ## Desteklenen dönemler
 

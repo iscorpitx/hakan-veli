@@ -161,3 +161,34 @@ def test_2023_verisi_olmayan_araclar_anlasilir_hata_verir():
         is_hukuku.kidem_tazminati(30000, "2020-01-01", "2023-11-30")
     with pytest.raises(ValueError):
         is_hukuku.kamu_isci_protokolu(2023)
+
+
+def test_gercek_bordro_agustos_2026():
+    # Gerçek bir işyeri bordrosundan (Ağustos 2026) yalnızca tutarlar; kişisel bilgi içermez.
+    # SGK matrahı 55.094,02 (ücret + yol parası), yol yardımının 4.942,13 TL'si gelir vergisinden istisna,
+    # kümülatif gelir vergisi matrahı 325.311,52 (bu ay dahil).
+    b = maas.brutten_nete(55094.02, 8, 2026, onceki_kumulatif_matrah=325311.52 - 41887.79, gv_istisna_tutari=4942.13)
+    assert b["sgk_isci"] == 7713.16
+    assert b["issizlik_isci"] == 550.94
+    assert b["gelir_vergisi_matrahi"] == 41887.79
+    assert b["kumulatif_matrah"] == 325311.52
+    assert b["gelir_vergisi_istisnasi"] == 5615.10  # Ağustos 2026 asgari ücret istisnası
+    assert b["odenecek_gelir_vergisi"] == 2762.46
+    assert b["odenecek_damga_vergisi"] == 167.46
+    assert b["net"] == 43900.00  # bordrodaki "net ödenecek tutar"
+
+
+def test_gercek_bordro_agustos_2026_netten_brute():
+    b = maas.netten_brute(43900, 8, 2026, onceki_kumulatif_matrah=283423.73, gv_istisna_tutari=4942.13)
+    assert b["brut"] == 55094.02
+
+
+def test_gv_istisna_tutari():
+    normal = maas.brutten_nete(60000, 1, 2026)
+    istisnali = maas.brutten_nete(60000, 1, 2026, gv_istisna_tutari=5000)
+    assert istisnali["sgk_isci"] == normal["sgk_isci"]  # SGK etkilenmez
+    assert istisnali["odenecek_damga_vergisi"] == normal["odenecek_damga_vergisi"]  # damga etkilenmez
+    assert istisnali["gelir_vergisi_matrahi"] == normal["gelir_vergisi_matrahi"] - 5000
+    assert istisnali["net"] == pytest.approx(normal["net"] + 750, abs=0.01)  # %15 dilimde
+    with pytest.raises(ValueError):
+        maas.brutten_nete(60000, 1, 2026, gv_istisna_tutari=-1)
