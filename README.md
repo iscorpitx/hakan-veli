@@ -14,10 +14,10 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 
 | Araç | Ne yapar |
 |---|---|
-| `brutten_nete` | Brüt ücretten net ücret (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası) |
+| `brutten_nete` | Brüt ücretten net ücret (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası); çalışan emekli (SGDP), engellilik indirimi ve BES dahil |
 | `netten_brute` | İstenen net ücret için gereken brüt ücret |
 | `yillik_bordro` | 12 aylık bordro tablosu ve yıllık toplamlar |
-| `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan) |
+| `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan / emekli çalışan SGDP) |
 | `asgari_ucret` | Asgari ücretin brüt, net ve işveren maliyeti |
 | `asgari_ucret_senaryosu` | "%25 zam gelirse?" gibi senaryolar: birden çok oran veya açıklanan net tutar için brüt, net, işveren maliyeti |
 | `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı; en düşük aylık desteği alanlar için asıl aylık üzerinden hesap |
@@ -42,6 +42,9 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 - "En düşük emekli aylığını alıyorum (20.000 TL), asıl aylığım 15.000 TL. Temmuz'da ne alacağım?"
 - "Brüt 50.000 TL maaşın Ocak ve Aralık'taki neti ne?"
 - "Eline net 60.000 TL geçmesi için brüt kaç olmalı?"
+- "Emekliyim ama asgari ücretle çalışıyorum, elime ne geçer? İşverene maliyetim ne?"
+- "2. derece engelliyim, brüt 50.000 TL maaşım var, engellilik indirimiyle netim ne olur?"
+- "Maaşımdan BES kesiliyor, brüt 60.000 TL, elime net ne geçer?"
 - "Bordrom doğru mu? Kasım 2023, ücret kazançları 20.328,30 TL, kümülatif matrah 160.107,36 TL"
 - "Asgari ücretli bir çalışanın işverene maliyeti ne?"
 - "Asgari ücrete %25, %30 ya da %35 zam gelirse net ne olur?"
@@ -109,6 +112,9 @@ Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
 | SGK tavanı | Asgari brüt × 9 = 297.270,00 TL |
 | Gelir vergisi (ücret) | 190 bin %15 · 400 bin %20 · 1,5 milyon %27 · 5,3 milyon %35 · üstü %40 |
 | Damga vergisi | ‰7,59 |
+| Çalışan emekli (SGDP) | işçi %7,5 · işveren %24,75 (işsizlik primi yok) |
+| Engellilik indirimi (aylık) | 1. derece 12.000 TL · 2. derece 7.000 TL · 3. derece 3.000 TL |
+| Otomatik BES | SGK'ya esas kazancın %3'ü (netten kesilir, vergiyi etkilemez) |
 | Emekli zammı Ocak 2026 | %12,19 (en düşük aylık 20.000 TL) |
 | Emekli zammı Temmuz 2026 | %17,76 (en düşük aylık 23.552 TL) |
 | Memur / 4/c emekli zammı Ocak 2026 | %18,60 + 1.000 TL taban aylık (en düşük 4/c aylığı 27.772 TL) |
@@ -122,7 +128,7 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 ## Varsayımlar ve sınırlar
 
 - `onceki_kumulatif_matrah` verilmezse çalışanın yılbaşından beri her ay aynı brüt ücreti aldığı varsayılır.
-- Engellilik indirimi, BES, yan haklar, teşvikli istihdam gibi özel durumlar henüz yoktur.
+- Yan haklar, teşvikli istihdam (işsizden istihdam vb.) ve AGİ dönemi gibi özel durumlar yoktur.
 - Memur zammı, net maaşa toplam oranın uygulanmasıyla yaklaşık hesaplanır. Kişiye özel kalemler (aile/çocuk yardımı, vergi dilimi, Ocak 2026'daki 1.000 TL taban aylık artışı) nedeniyle gerçek tutar birkaç yüz TL farklı olabilir. Unvana göre tam memur bordrosu henüz yoktur.
 - Kıdem tazminatında küsurat ay/12 ve gün/365 olarak orantılanır. Tazminat hakkının doğup doğmadığı (istifa, haklı fesih vb.) araç tarafından değerlendirilmez.
 - İhbar tazminatı ve izin ücretinde gelir vergisi, verilen kümülatif matraha göre hesaplanır (varsayılan 0, yani %15).
@@ -134,7 +140,7 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 - [x] Belediye / kamu işçisi TİS zammı
 - [x] Yıllık izin, izin ücreti, fazla mesai, tatil mesaisi
 - [ ] Unvana göre tam memur bordrosu (katsayılar, gösterge, ek gösterge, tazminatlar)
-- [ ] Engellilik indirimi, BES, SGDP (emekli çalışan)
+- [x] Engellilik indirimi, BES, SGDP (emekli çalışan)
 - [ ] 2027 parametreleri (Ocak 2027'de)
 - [ ] PyPI yayını (`uvx zam-hesap-mcp`)
 

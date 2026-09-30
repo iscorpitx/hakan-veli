@@ -192,3 +192,58 @@ def test_gv_istisna_tutari():
     assert istisnali["net"] == pytest.approx(normal["net"] + 750, abs=0.01)  # %15 dilimde
     with pytest.raises(ValueError):
         maas.brutten_nete(60000, 1, 2026, gv_istisna_tutari=-1)
+
+
+def test_sgdp_asgari_ucretli_emekli_calisan_2026():
+    b = maas.brutten_nete(33030, 1, 2026, sgdp=True)
+    assert b["sgk_isci"] == 2477.25  # %7,5 SGDP
+    assert b["issizlik_isci"] == 0
+    assert b["gelir_vergisi_matrahi"] == 30552.75
+    assert b["gelir_vergisi_istisnasi"] == 4211.33  # istisna normal asgari ücretliyle aynı
+    assert b["odenecek_gelir_vergisi"] == 371.58
+    assert b["odenecek_damga_vergisi"] == 0
+    # Yayımlanan örnek: net 30.181,16 (gelir vergisi 371,59); fark 1 kuruşluk yuvarlamadır.
+    assert b["net"] == pytest.approx(30181.16, abs=0.011)
+
+
+def test_sgdp_isveren_maliyeti_2026():
+    m = maas.isveren_maliyeti(33030, yil=2026, sgdp=True)
+    assert m["sgk_isveren"] == 8174.93  # %22,5 SGDP + %2,25 KVSK
+    assert m["issizlik_isveren"] == 0
+    assert m["toplam_maliyet"] == 41204.93  # yayımlanan tutar
+    with pytest.raises(ValueError):
+        maas.isveren_maliyeti(33030, "genel", 2026, sgdp=True)
+
+
+@pytest.mark.parametrize("derece,indirim,net_artis", [(1, 12000, 1800.00), (2, 7000, 1050.00), (3, 3000, 450.00)])
+def test_engellilik_indirimi_2026(derece, indirim, net_artis):
+    normal = maas.brutten_nete(50000, 1, 2026)
+    engelli = maas.brutten_nete(50000, 1, 2026, engellilik_derecesi=derece)
+    assert engelli["engellilik_indirimi"] == indirim
+    assert engelli["gelir_vergisi_matrahi"] == normal["gelir_vergisi_matrahi"] - indirim
+    assert engelli["sgk_isci"] == normal["sgk_isci"]
+    assert engelli["net"] == pytest.approx(normal["net"] + net_artis, abs=0.01)  # %15 dilimde
+
+
+def test_engellilik_hatalari():
+    with pytest.raises(ValueError):
+        maas.brutten_nete(50000, 1, 2026, engellilik_derecesi=4)
+    with pytest.raises(ValueError, match="engellilik"):
+        maas.brutten_nete(20000, 1, 2023, engellilik_derecesi=1)  # 2023 tutarları kayıtlı değil
+
+
+@pytest.mark.parametrize("brut,kesinti", [(33030, 990.90), (400000, 8918.10)])
+def test_bes_kesintisi_2026(brut, kesinti):
+    normal = maas.brutten_nete(brut, 1, 2026)
+    bes = maas.brutten_nete(brut, 1, 2026, bes=True)
+    assert bes["bes_kesintisi"] == kesinti  # SGK'ya esas kazancın %3'ü, tavanla sınırlı
+    assert bes["odenecek_gelir_vergisi"] == normal["odenecek_gelir_vergisi"]  # vergiyi etkilemez
+    assert bes["net"] == pytest.approx(normal["net"] - kesinti, abs=0.001)
+
+
+def test_ozel_durumlar_birlikte_ve_netten_brute():
+    b = maas.brutten_nete(60000, 5, 2026, sgdp=True, engellilik_derecesi=2, bes=True)
+    geri = maas.netten_brute(b["net"], 5, 2026, sgdp=True, engellilik_derecesi=2, bes=True)
+    assert geri["brut"] == pytest.approx(60000, abs=0.02)
+    yillik = maas.yillik_bordro(60000, 2026, sgdp=True, bes=True)
+    assert yillik["yillik_toplam"]["bes_kesintisi"] == pytest.approx(60000 * 0.03 * 12, abs=0.01)

@@ -20,11 +20,18 @@ sgk:
     genel: 0.05             # 2023'te 5 puanlık indirim tüm sektörlere uygulanıyordu
     imalat: 0.05
   tavan_katsayisi: 7.5
+  sgdp:
+    isci_orani: 0.075
+    isveren_orani: 0.2475
   kaynak: "5510 sayılı Kanun, 2023"
 
 damga_vergisi:
   oran: 0.00759
   kaynak: "488 sayılı Damga Vergisi Kanunu (1) sayılı tablo"
+
+bes:
+  oran: 0.03
+  kaynak: "4632 sayılı Kanun ek md. 2"
 
 gelir_vergisi:
   ucret_dilimleri:
