@@ -1,0 +1,20 @@
+name: publish
+
+# GitHub'da yeni bir Release yayımlandığında paketi PyPI'ye yükler.
+# Önce pypi.org'da "Trusted Publisher" tanımlanmalıdır (README > Yayınlama).
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv venv && uv pip install -e ".[test]" && uv run --no-sync pytest -q
+      - run: uv build
+      - uses: pypa/gh-action-pypi-publish@release/v1
