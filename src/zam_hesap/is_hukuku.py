@@ -72,7 +72,7 @@ def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str, tavan: floa
         if not tahmini:
             raise ValueError(f"{c.year} yılı için veri yok; tahmini hesap için tavan verin.") from None
         p = yukle()
-    tavanlar = p["kidem_tazminati"]["tavan"]
+    tavanlar = p.get("kidem_tazminati", {}).get("tavan", {})
     if not tahmini and donem not in tavanlar:
         raise ValueError(f"{donem} dönemi için kıdem tavanı kayıtlı değil; tahmini hesap için tavan verin. Kayıtlı: {sorted(tavanlar)}")
     tavan = d(tavan) if tahmini else d(tavanlar[donem])
@@ -231,4 +231,6 @@ def tis_zammi(
 def kamu_isci_protokolu(yil: int | None = None) -> dict[str, Any]:
     """Kamu işçileri çerçeve protokolündeki dönemsel zam oranları."""
     p = yukle(yil)
+    if "kamu_isci" not in p:
+        raise ValueError(f"{p['yil']} yılı için kamu işçisi protokol verisi yok")
     return {"yil": p["yil"], **p["kamu_isci"]}

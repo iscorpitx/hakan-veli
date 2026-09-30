@@ -37,30 +37,46 @@ def _aylik_vergi(kumulatif_once: Decimal, aylik_matrah: Decimal, dilimler) -> De
     return gelir_vergisi(kumulatif_once + aylik_matrah, dilimler) - gelir_vergisi(kumulatif_once, dilimler)
 
 
-def _bordro_satiri(brut: Decimal, ay: int, p: dict[str, Any]) -> dict[str, Decimal]:
+def asgari_brut(p: dict[str, Any], ay: int) -> Decimal:
+    """Verilen ayda geçerli asgari brüt ücret (yıl içinde birden çok artış olabilir)."""
+    gecerli = p["asgari_ucret"]["brut"]
+    for degisim in p["asgari_ucret"].get("aylik_degisim", []):
+        if degisim["ay"] <= ay:
+            gecerli = degisim["brut"]
+    return d(gecerli)
+
+
+def _sgk_kesintileri(ucret: Decimal, ay: int, p: dict[str, Any]) -> tuple[Decimal, Decimal, Decimal]:
+    """SGK işçi, işsizlik işçi payları ve gelir vergisi matrahı."""
     sgk = p["sgk"]
+    prim_matrahi = min(ucret, asgari_brut(p, ay) * d(sgk["tavan_katsayisi"]))
+    sgk_isci = yuvarla(prim_matrahi * d(sgk["isci_orani"]))
+    issizlik = yuvarla(prim_matrahi * d(sgk["issizlik_isci_orani"]))
+    return sgk_isci, issizlik, ucret - sgk_isci - issizlik
+
+
+def _bordro_satiri(
+    brut: Decimal, ay: int, p: dict[str, Any], onceki_kumulatif: Decimal | None = None
+) -> dict[str, Decimal]:
     dilimler = p["gelir_vergisi"]["ucret_dilimleri"]
     damga_orani = d(p["damga_vergisi"]["oran"])
-    asgari_brut = d(p["asgari_ucret"]["brut"])
-    tavan = asgari_brut * sgk["tavan_katsayisi"]
+    asgari = asgari_brut(p, ay)
 
-    def kesintiler(ucret: Decimal) -> tuple[Decimal, Decimal, Decimal]:
-        prim_matrahi = min(ucret, tavan)
-        sgk_isci = yuvarla(prim_matrahi * d(sgk["isci_orani"]))
-        issizlik = yuvarla(prim_matrahi * d(sgk["issizlik_isci_orani"]))
-        return sgk_isci, issizlik, ucret - sgk_isci - issizlik
+    sgk_isci, issizlik_isci, gv_matrahi = _sgk_kesintileri(brut, ay, p)
+    # Asgari ücretin o aya kadarki kümülatif matrahı (istisna hesabı için)
+    asgari_onceki = sum((_sgk_kesintileri(asgari_brut(p, a), a, p)[2] for a in range(1, ay)), Decimal(0))
+    asgari_matrah = _sgk_kesintileri(asgari, ay, p)[2]
 
-    sgk_isci, issizlik_isci, gv_matrahi = kesintiler(brut)
-    _, _, asgari_matrah = kesintiler(asgari_brut)
-
-    onceki_kumulatif = gv_matrahi * (ay - 1)
+    if onceki_kumulatif is None:
+        # Asgari ücretli yıl boyunca asgari ücret almıştır; diğerleri için aynı brüt varsayılır.
+        onceki_kumulatif = asgari_onceki if brut == asgari else gv_matrahi * (ay - 1)
     hesaplanan_gv = yuvarla(_aylik_vergi(onceki_kumulatif, gv_matrahi, dilimler))
-    # Asgari ücrete isabet eden gelir vergisi istisnası (GVK 23/18), aylık kümülatif hesaplanır.
-    gv_istisnasi = yuvarla(_aylik_vergi(asgari_matrah * (ay - 1), asgari_matrah, dilimler))
+    # Asgari ücrete isabet eden gelir vergisi istisnası (GVK 23/18)
+    gv_istisnasi = yuvarla(_aylik_vergi(asgari_onceki, asgari_matrah, dilimler))
     gv_istisnasi = min(gv_istisnasi, hesaplanan_gv)
 
     hesaplanan_damga = yuvarla(brut * damga_orani)
-    damga_istisnasi = min(yuvarla(asgari_brut * damga_orani), hesaplanan_damga)
+    damga_istisnasi = min(yuvarla(asgari * damga_orani), hesaplanan_damga)
 
     odenecek_gv = hesaplanan_gv - gv_istisnasi
     odenecek_damga = hesaplanan_damga - damga_istisnasi
@@ -92,15 +108,30 @@ def _ay_kontrol(ay: int) -> None:
         raise ValueError("ay 1 ile 12 arasında olmalı")
 
 
-def brutten_nete(brut: float, ay: int = 1, yil: int | None = None) -> dict[str, Any]:
-    """Belirli bir ayın bordrosunu hesaplar (yılbaşından beri aynı brüt varsayımıyla)."""
+def _onceki(onceki_kumulatif_matrah: float | None) -> Decimal | None:
+    if onceki_kumulatif_matrah is None:
+        return None
+    if onceki_kumulatif_matrah < 0:
+        raise ValueError("onceki_kumulatif_matrah negatif olamaz")
+    return d(onceki_kumulatif_matrah)
+
+
+def brutten_nete(
+    brut: float, ay: int = 1, yil: int | None = None, onceki_kumulatif_matrah: float | None = None
+) -> dict[str, Any]:
+    """Belirli bir ayın bordrosunu hesaplar.
+
+    onceki_kumulatif_matrah: o aydan ÖNCEKİ aylarda birikmiş gelir vergisi matrahı. Verilmezse
+    yılbaşından beri aynı brüt ücretin alındığı varsayılır. Bordrodaki "kümülatif matrah" bu ay dahil
+    olduğundan, bordrodan alınan değerden bu ayın gelir vergisi matrahı çıkarılmalıdır.
+    """
     _ay_kontrol(ay)
     p = yukle(yil)
     brut_d = d(brut)
-    asgari = d(p["asgari_ucret"]["brut"])
+    asgari = asgari_brut(p, ay)
     if brut_d < asgari:
-        raise ValueError(f"Brüt ücret {p['yil']} asgari brüt ücretinden ({asgari} TL) düşük olamaz")
-    return {"yil": p["yil"], **_disari(_bordro_satiri(brut_d, ay, p))}
+        raise ValueError(f"Brüt ücret, {p['yil']}/{ay} asgari brüt ücretinden ({asgari} TL) düşük olamaz")
+    return {"yil": p["yil"], **_disari(_bordro_satiri(brut_d, ay, p, _onceki(onceki_kumulatif_matrah)))}
 
 
 def yillik_bordro(brut: float, yil: int | None = None) -> dict[str, Any]:
@@ -112,26 +143,29 @@ def yillik_bordro(brut: float, yil: int | None = None) -> dict[str, Any]:
     return {"yil": p["yil"], "aylar": [_disari(a) for a in aylar], "yillik_toplam": toplam}
 
 
-def netten_brute(net: float, ay: int = 1, yil: int | None = None) -> dict[str, Any]:
+def netten_brute(
+    net: float, ay: int = 1, yil: int | None = None, onceki_kumulatif_matrah: float | None = None
+) -> dict[str, Any]:
     """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur (ikili arama)."""
     _ay_kontrol(ay)
     p = yukle(yil)
     hedef = d(net)
-    alt = d(p["asgari_ucret"]["brut"])
-    if _bordro_satiri(alt, ay, p)["net"] > hedef:
+    onceki = _onceki(onceki_kumulatif_matrah)
+    alt = asgari_brut(p, ay)
+    if _bordro_satiri(alt, ay, p, onceki)["net"] > hedef:
         raise ValueError("İstenen net ücret, asgari ücretin netinden düşük")
     ust = hedef * 3
     while ust - alt > KURUS:
         orta = yuvarla((alt + ust) / 2)
         if orta in (alt, ust):
             break
-        if _bordro_satiri(orta, ay, p)["net"] < hedef:
+        if _bordro_satiri(orta, ay, p, onceki)["net"] < hedef:
             alt = orta
         else:
             ust = orta
     # Net'i hedefe en yakın getiren kuruşu seç.
-    aday = min((alt, ust), key=lambda b: abs(_bordro_satiri(b, ay, p)["net"] - hedef))
-    return {"yil": p["yil"], "istenen_net": float(hedef), **_disari(_bordro_satiri(aday, ay, p))}
+    aday = min((alt, ust), key=lambda b: abs(_bordro_satiri(b, ay, p, onceki)["net"] - hedef))
+    return {"yil": p["yil"], "istenen_net": float(hedef), **_disari(_bordro_satiri(aday, ay, p, onceki))}
 
 
 def isveren_maliyeti(brut: float, tesvik: str = "yok", yil: int | None = None) -> dict[str, Any]:
@@ -144,7 +178,7 @@ def isveren_maliyeti(brut: float, tesvik: str = "yok", yil: int | None = None) -
     if tesvik not in sgk["tesvik_puani"]:
         raise ValueError(f"tesvik şu değerlerden biri olmalı: {list(sgk['tesvik_puani'])}")
     brut_d = d(brut)
-    prim_matrahi = min(brut_d, d(p["asgari_ucret"]["brut"]) * sgk["tavan_katsayisi"])
+    prim_matrahi = min(brut_d, d(p["asgari_ucret"]["brut"]) * d(sgk["tavan_katsayisi"]))
     isveren_orani = d(sgk["isveren_orani"]) - d(sgk["tesvik_puani"][tesvik])
     sgk_isveren = yuvarla(prim_matrahi * isveren_orani)
     issizlik_isveren = yuvarla(prim_matrahi * d(sgk["issizlik_isveren_orani"]))
@@ -163,7 +197,8 @@ def asgari_ucret(yil: int | None = None) -> dict[str, Any]:
     """Asgari ücretin brüt, net ve işveren maliyeti özeti."""
     p = yukle(yil)
     brut = p["asgari_ucret"]["brut"]
-    bordro = brutten_nete(brut, 1, p["yil"])
+    son_ay = max([x["ay"] for x in p["asgari_ucret"].get("aylik_degisim", [])] or [1])
+    bordro = brutten_nete(brut, son_ay, p["yil"])
     return {
         "yil": p["yil"],
         "brut": float(brut),
