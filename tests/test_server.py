@@ -8,6 +8,7 @@ BEKLENEN_ARACLAR = {
     "yillik_bordro",
     "isveren_maliyeti",
     "asgari_ucret",
+    "asgari_ucret_senaryosu",
     "emekli_zammi",
     "kumulatif_enflasyon",
     "guncel_parametreler",

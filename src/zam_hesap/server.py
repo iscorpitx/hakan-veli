@@ -57,6 +57,20 @@ def asgari_ucret(yil: int | None = None) -> dict[str, Any]:
 
 
 @mcp.tool()
+def asgari_ucret_senaryosu(
+    zam_oranlari_yuzde: list[float] | None = None,
+    yeni_netler: list[float] | None = None,
+    yil: int | None = None,
+) -> dict[str, Any]:
+    """Asgari ücrete zam senaryoları: "%25 zam gelirse net ne olur?" gibi sorular için.
+
+    zam_oranlari_yuzde: bir veya birden çok oran, ör. [20, 25, 30, 35]. Karşılaştırma istenirse hepsini tek çağrıda ver.
+    yeni_netler: açıklanan/konuşulan yeni net tutarlar, ör. [35000]. Brüt ve işveren maliyeti bulunur.
+    """
+    return maas.asgari_ucret_senaryosu(zam_oranlari_yuzde, yeni_netler, yil)
+
+
+@mcp.tool()
 def emekli_zammi(
     mevcut_aylik: float,
     donem: str | None = None,

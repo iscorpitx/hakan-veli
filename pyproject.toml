@@ -1,6 +1,6 @@
 [project]
 name = "zam-hesap-mcp"
-version = "0.2.1"
+version = "0.2.2"
 description = "Türkiye maaş, asgari ücret, emekli/memur zammı, kıdem-ihbar ve izin hesapları için MCP sunucusu"
 readme = "README.md"
 license = "MIT"

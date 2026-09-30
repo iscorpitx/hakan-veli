@@ -19,6 +19,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 | `yillik_bordro` | 12 aylık bordro tablosu ve yıllık toplamlar |
 | `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan) |
 | `asgari_ucret` | Asgari ücretin brüt, net ve işveren maliyeti |
+| `asgari_ucret_senaryosu` | "%25 zam gelirse?" gibi senaryolar: birden çok oran veya açıklanan net tutar için brüt, net, işveren maliyeti |
 | `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı; en düşük aylık desteği alanlar için asıl aylık üzerinden hesap |
 | `memur_zammi` | Memur maaşı ve memur emeklisi (4/c) zammı |
 | `tis_zammi` | Belediye, kamu veya özel sektör işçisinin toplu sözleşme zammı: yeni brüt ve net |
@@ -40,6 +41,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 - "Brüt 50.000 TL maaşın Ocak ve Aralık'taki neti ne?"
 - "Eline net 60.000 TL geçmesi için brüt kaç olmalı?"
 - "Asgari ücretli bir çalışanın işverene maliyeti ne?"
+- "Asgari ücrete %25, %30 ya da %35 zam gelirse net ne olur?"
 - "Enflasyon önümüzdeki 6 ay ayda %2 olursa emekli zammı yüzde kaç olur?"
 - "Memurum, net maaşım 62.000 TL, Temmuz zammıyla ne olur?"
 - "Belediyede işçiyim, brüt 40.000 TL, TİS'te %10 ve %6 zam var, yeni netim ne?"
