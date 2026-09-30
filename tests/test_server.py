@@ -11,6 +11,16 @@ BEKLENEN_ARACLAR = {
     "emekli_zammi",
     "kumulatif_enflasyon",
     "guncel_parametreler",
+    "memur_zammi",
+    "kidem_tazminati",
+    "ihbar_tazminati",
+    "hizmet_suresi",
+    "yillik_izin",
+    "izin_ucreti",
+    "fazla_mesai",
+    "tatil_mesaisi",
+    "tis_zammi",
+    "kamu_isci_protokolu",
 }
 
 

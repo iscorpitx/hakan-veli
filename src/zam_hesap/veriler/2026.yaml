@@ -47,3 +47,32 @@ emekli:
       zam_orani: 0.1776
       en_dusuk_aylik: 23552.00
       kaynak: "TÜİK Ocak-Haziran 2026 TÜFE; en düşük aylık düzenlemesi"
+
+memur:
+  # Memur ve memur emeklileri (4/c, Emekli Sandığı): toplu sözleşme zammı + enflasyon farkı
+  donemler:
+    "2026-01":
+      zam_orani: 0.1860
+      taban_aylik_artisi: 1000.00   # memur brüt taban aylığına ayrıca eklenen seyyanen tutar
+      en_dusuk_memur_maasi: 61890.00  # aile yardımı dahil
+      en_dusuk_emekli_aylik: 27772.00
+      kaynak: "%11 toplu sözleşme + enflasyon farkı; 1.000 TL taban aylık artışı"
+    "2026-07":
+      zam_orani: 0.1352
+      en_dusuk_memur_maasi: 70224.00  # aile yardımı dahil
+      kaynak: "%7 toplu sözleşme + %6,09 enflasyon farkı (bileşik)"
+
+kidem_tazminati:
+  # Kıdem tazminatı tavanı, iş sözleşmesinin sona erdiği tarihe göre uygulanır
+  tavan:
+    "2026-01": 64948.77
+    "2026-07": 73729.87
+  kaynak: "Hazine ve Maliye Bakanlığı memur maaş katsayıları genelgesi (en yüksek devlet memuru emeklilik ikramiyesi)"
+
+kamu_isci:
+  # 2025-2026 Kamu Toplu İş Sözleşmeleri Çerçeve Protokolü (bilgi amaçlı; TİS'ler kurumdan kuruma farklılık gösterebilir)
+  donemler:
+    "2026-01": { zam_orani: 0.10 }
+    "2026-07": { zam_orani: 0.06 }
+  not: "Dönem enflasyonu zam oranını aşarsa fark ocak ayında ücrete yansıtılır."
+  kaynak: "ÇSGB, 2025-2026 Dönemi Kamu TİS Çerçeve Protokolü"

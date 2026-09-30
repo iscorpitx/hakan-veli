@@ -1,12 +1,12 @@
 [project]
 name = "zam-hesap-mcp"
-version = "0.1.0"
-description = "Türkiye maaş, asgari ücret ve emekli zammı hesapları için MCP sunucusu"
+version = "0.2.0"
+description = "Türkiye maaş, asgari ücret, emekli/memur zammı, kıdem-ihbar ve izin hesapları için MCP sunucusu"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.10"
 dependencies = ["mcp>=2.2,<3", "pyyaml>=6"]
-keywords = ["mcp", "claude", "turkiye", "maas", "emekli", "asgari-ucret", "bordro"]
+keywords = ["mcp", "claude", "turkiye", "maas", "emekli", "asgari-ucret", "bordro", "kidem-tazminati", "memur"]
 
 [project.scripts]
 zam-hesap-mcp = "zam_hesap.server:main"

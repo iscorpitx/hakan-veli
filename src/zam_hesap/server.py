@@ -6,14 +6,14 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, emekli, maas
+from . import __version__, emekli, is_hukuku, maas, memur
 from .parametreler import desteklenen_yillar, yukle
 
 mcp = MCPServer(
     "zam-hesap",
     version=__version__,
     instructions=(
-        "Türkiye'de maaş, asgari ücret ve emekli zammı hesapları. Rakamları tahmin etme; "
+        "Türkiye'de maaş, asgari ücret, emekli/memur zammı, kıdem-ihbar tazminatı, izin ve mesai hesapları. Rakamları tahmin etme; "
         "bu araçları çağır ve sonuçları kuruşuyla aktar. Sonuçlar bilgilendirme amaçlıdır."
     ),
 )
@@ -72,6 +72,88 @@ def emekli_zammi(
 def kumulatif_enflasyon(aylik_oranlar_yuzde: list[float]) -> dict[str, Any]:
     """Aylık enflasyon oranlarından (yüzde) birikimli artışı hesaplar. Emekli zammı tahmini için kullanılır."""
     return emekli.kumulatif_enflasyon(aylik_oranlar_yuzde)
+
+
+@mcp.tool()
+def memur_zammi(
+    mevcut_net: float, tur: str = "memur", donem: str | None = None, zam_orani_yuzde: float | None = None
+) -> dict[str, Any]:
+    """Memur maaşına veya memur emeklisi (4/c, Emekli Sandığı) aylığına dönemin zammını uygular.
+
+    tur: "memur" veya "emekli". donem: "2026-01", "2026-07" gibi; verilmezse en son dönem.
+    zam_orani_yuzde: senaryo/tahmin oranı (ör. 11.5).
+    """
+    return memur.memur_zammi(mevcut_net, tur, donem, zam_orani_yuzde)
+
+
+@mcp.tool()
+def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str) -> dict[str, Any]:
+    """Kıdem tazminatı. Tarihler YYYY-AA-GG. giydirilmis_brut: son brüt ücret + düzenli yan ödemeler
+    (yemek, yol, ikramiyenin aylık payı vb.). Tavan çıkış tarihine göre uygulanır; yalnızca damga vergisi kesilir.
+    """
+    return is_hukuku.kidem_tazminati(giydirilmis_brut, giris, cikis)
+
+
+@mcp.tool()
+def ihbar_tazminati(
+    giydirilmis_brut: float, giris: str, cikis: str, onceki_kumulatif_matrah: float = 0
+) -> dict[str, Any]:
+    """İhbar tazminatı ve ihbar süresi (2/4/6/8 hafta). Tarihler YYYY-AA-GG.
+
+    onceki_kumulatif_matrah: çıkış yılında o ana kadarki gelir vergisi matrahı (bilinmiyorsa 0).
+    """
+    return is_hukuku.ihbar_tazminati(giydirilmis_brut, giris, cikis, onceki_kumulatif_matrah)
+
+
+@mcp.tool()
+def hizmet_suresi(giris: str, cikis: str) -> dict[str, Any]:
+    """İki tarih arasındaki çalışma süresi (yıl, ay, gün). Tarihler YYYY-AA-GG."""
+    return is_hukuku.hizmet_suresi(giris, cikis)
+
+
+@mcp.tool()
+def yillik_izin(hizmet_yili: int, yas: int | None = None, yeralti: bool = False) -> dict[str, Any]:
+    """Yıllık ücretli izin gün sayısı (1-5 yıl 14, 5-15 yıl 20, 15+ yıl 26 gün; yaş ve yer altı kuralları dahil)."""
+    return is_hukuku.yillik_izin(hizmet_yili, yas, yeralti)
+
+
+@mcp.tool()
+def izin_ucreti(brut: float, gun: int, yil: int | None = None, onceki_kumulatif_matrah: float = 0) -> dict[str, Any]:
+    """Kullanılmayan yıllık izin ücreti (işten ayrılırken ödenir), brüt ve net."""
+    return is_hukuku.izin_ucreti(brut, gun, yil, onceki_kumulatif_matrah)
+
+
+@mcp.tool()
+def fazla_mesai(brut: float, saat: float, tur: str = "fazla_calisma") -> dict[str, Any]:
+    """Fazla mesai brüt ücreti. tur: "fazla_calisma" (%50 zamlı) veya "fazla_surelerle" (%25 zamlı)."""
+    return is_hukuku.fazla_mesai(brut, saat, tur)
+
+
+@mcp.tool()
+def tatil_mesaisi(brut: float, gun: float) -> dict[str, Any]:
+    """Ulusal bayram / genel tatil gününde çalışma için ek ödeme (her gün için 1 günlük brüt ücret)."""
+    return is_hukuku.tatil_mesaisi(brut, gun)
+
+
+@mcp.tool()
+def tis_zammi(
+    mevcut_brut: float,
+    zam_oranlari_yuzde: list[float],
+    seyyanen_brut: float = 0,
+    ay: int = 1,
+    yil: int | None = None,
+) -> dict[str, Any]:
+    """Toplu iş sözleşmesi zammı (belediye, kamu veya özel sektör işçisi): yeni brüt ve net ücret.
+
+    zam_oranlari_yuzde: sırayla uygulanacak oranlar, ör. [10, 6]. seyyanen_brut: oranlardan önce eklenen sabit tutar.
+    """
+    return is_hukuku.tis_zammi(mevcut_brut, zam_oranlari_yuzde, seyyanen_brut, ay, yil)
+
+
+@mcp.tool()
+def kamu_isci_protokolu(yil: int | None = None) -> dict[str, Any]:
+    """Kamu işçileri toplu iş sözleşmesi çerçeve protokolündeki dönemsel zam oranları."""
+    return is_hukuku.kamu_isci_protokolu(yil)
 
 
 @mcp.tool()
