@@ -1,0 +1,36 @@
+# 2023 yılı parametreleri (geçmiş bordroları doğrulamak için).
+# 2023'te asgari ücret yılda iki kez belirlendi.
+
+yil: 2023
+
+asgari_ucret:
+  brut: 13414.50            # yılın son asgari ücreti (Temmuz-Aralık)
+  aylik_degisim:            # ay: o aydan itibaren geçerli brüt
+    - { ay: 1, brut: 10008.00 }
+    - { ay: 7, brut: 13414.50 }
+  kaynak: "Asgari Ücret Tespit Komisyonu kararları, 2023 (Ocak ve Temmuz)"
+
+sgk:
+  isci_orani: 0.14
+  issizlik_isci_orani: 0.01
+  isveren_orani: 0.205
+  issizlik_isveren_orani: 0.02
+  tesvik_puani:
+    yok: 0.0
+    genel: 0.05             # 2023'te 5 puanlık indirim tüm sektörlere uygulanıyordu
+    imalat: 0.05
+  tavan_katsayisi: 7.5
+  kaynak: "5510 sayılı Kanun, 2023"
+
+damga_vergisi:
+  oran: 0.00759
+  kaynak: "488 sayılı Damga Vergisi Kanunu (1) sayılı tablo"
+
+gelir_vergisi:
+  ucret_dilimleri:
+    - { ust_sinir: 70000, oran: 0.15 }
+    - { ust_sinir: 150000, oran: 0.20 }
+    - { ust_sinir: 550000, oran: 0.27 }
+    - { ust_sinir: 1900000, oran: 0.35 }
+    - { ust_sinir: null, oran: 0.40 }
+  kaynak: "GVK 103. madde, 2023 yılı tarifesi"

@@ -107,3 +107,88 @@ def test_asgari_ucret_senaryosu_mevcut_ile_tutarli():
 def test_asgari_ucret_senaryosu_bos():
     with pytest.raises(ValueError):
         maas.asgari_ucret_senaryosu()
+
+
+def test_gercek_bordro_kasim_2023():
+    # Gerçek bir işyeri bordrosundan (Kasım 2023) yalnızca tutarlar; kişisel bilgi içermez.
+    # Ücret kazançları toplamı 20.328,30 TL (ayni yemek yardımı hariç), bordrodaki kümülatif
+    # gelir vergisi matrahı 160.107,36 TL (bu ay dahil).
+    b = maas.brutten_nete(20328.30, 11, 2023, onceki_kumulatif_matrah=160107.36 - 17279.06)
+    assert b["sgk_isci"] == 2845.96
+    assert b["issizlik_isci"] == 203.28
+    assert b["gelir_vergisi_matrahi"] == 17279.06
+    assert b["kumulatif_matrah"] == 160107.36
+    assert b["odenecek_gelir_vergisi"] == 1882.87
+    assert b["odenecek_damga_vergisi"] == 52.47
+    assert b["net"] == 15343.72  # bordrodaki "net ödenecek tutar"
+
+
+@pytest.mark.parametrize("ay,brut,net", [(1, 10008.00, 8506.80), (6, 10008.00, 8506.80), (7, 13414.50, 11402.32), (12, 13414.50, 11402.32)])
+def test_2023_asgari_ucret_yil_ici_artis(ay, brut, net):
+    b = maas.brutten_nete(brut, ay, 2023)
+    assert b["odenecek_gelir_vergisi"] == 0
+    assert b["odenecek_damga_vergisi"] == 0
+    assert b["net"] == net
+
+
+def test_2023_asgari_ucret_isveren_maliyeti():
+    # 2023 Temmuz-Aralık: %20,5 - 5 puan + %2 işsizlik
+    assert maas.asgari_ucret(2023)["isveren_maliyeti"]["genel"] == 15762.04
+    assert maas.isveren_maliyeti(10008, "genel", 2023)["toplam_maliyet"] == 11759.40
+
+
+def test_onceki_kumulatif_matrah_vergi_dilimini_degistirir():
+    varsayilan = maas.brutten_nete(60000, 3, 2026)
+    yuksek = maas.brutten_nete(60000, 3, 2026, onceki_kumulatif_matrah=380000)
+    assert yuksek["hesaplanan_gelir_vergisi"] > varsayilan["hesaplanan_gelir_vergisi"]
+    assert yuksek["net"] < varsayilan["net"]
+    with pytest.raises(ValueError):
+        maas.brutten_nete(60000, 3, 2026, onceki_kumulatif_matrah=-1)
+
+
+def test_netten_brute_onceki_kumulatif_ile():
+    b = maas.brutten_nete(20328.30, 11, 2023, onceki_kumulatif_matrah=142828.30)
+    geri = maas.netten_brute(b["net"], 11, 2023, onceki_kumulatif_matrah=142828.30)
+    assert geri["brut"] == pytest.approx(20328.30, abs=0.02)
+
+
+def test_2023_verisi_olmayan_araclar_anlasilir_hata_verir():
+    from zam_hesap import is_hukuku, memur
+
+    with pytest.raises(ValueError):
+        memur.memur_zammi(40000, "memur", "2023-07")
+    with pytest.raises(ValueError, match="tavan"):
+        is_hukuku.kidem_tazminati(30000, "2020-01-01", "2023-11-30")
+    with pytest.raises(ValueError):
+        is_hukuku.kamu_isci_protokolu(2023)
+
+
+def test_gercek_bordro_agustos_2026():
+    # Gerçek bir işyeri bordrosundan (Ağustos 2026) yalnızca tutarlar; kişisel bilgi içermez.
+    # SGK matrahı 55.094,02 (ücret + yol parası), yol yardımının 4.942,13 TL'si gelir vergisinden istisna,
+    # kümülatif gelir vergisi matrahı 325.311,52 (bu ay dahil).
+    b = maas.brutten_nete(55094.02, 8, 2026, onceki_kumulatif_matrah=325311.52 - 41887.79, gv_istisna_tutari=4942.13)
+    assert b["sgk_isci"] == 7713.16
+    assert b["issizlik_isci"] == 550.94
+    assert b["gelir_vergisi_matrahi"] == 41887.79
+    assert b["kumulatif_matrah"] == 325311.52
+    assert b["gelir_vergisi_istisnasi"] == 5615.10  # Ağustos 2026 asgari ücret istisnası
+    assert b["odenecek_gelir_vergisi"] == 2762.46
+    assert b["odenecek_damga_vergisi"] == 167.46
+    assert b["net"] == 43900.00  # bordrodaki "net ödenecek tutar"
+
+
+def test_gercek_bordro_agustos_2026_netten_brute():
+    b = maas.netten_brute(43900, 8, 2026, onceki_kumulatif_matrah=283423.73, gv_istisna_tutari=4942.13)
+    assert b["brut"] == 55094.02
+
+
+def test_gv_istisna_tutari():
+    normal = maas.brutten_nete(60000, 1, 2026)
+    istisnali = maas.brutten_nete(60000, 1, 2026, gv_istisna_tutari=5000)
+    assert istisnali["sgk_isci"] == normal["sgk_isci"]  # SGK etkilenmez
+    assert istisnali["odenecek_damga_vergisi"] == normal["odenecek_damga_vergisi"]  # damga etkilenmez
+    assert istisnali["gelir_vergisi_matrahi"] == normal["gelir_vergisi_matrahi"] - 5000
+    assert istisnali["net"] == pytest.approx(normal["net"] + 750, abs=0.01)  # %15 dilimde
+    with pytest.raises(ValueError):
+        maas.brutten_nete(60000, 1, 2026, gv_istisna_tutari=-1)

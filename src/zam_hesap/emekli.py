@@ -32,7 +32,7 @@ def _onceki_donem(donem: str) -> str:
 
 def _donemler(yil: int) -> dict[str, Any]:
     try:
-        return yukle(yil)["emekli"]["donemler"]
+        return yukle(yil).get("emekli", {}).get("donemler", {})
     except ValueError:
         return {}  # veri dosyası olmayan (ör. gelecek) yıl
 

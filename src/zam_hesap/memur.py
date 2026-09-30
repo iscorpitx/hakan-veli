@@ -32,7 +32,7 @@ def memur_zammi(
     if donem is None:
         donem = max(yukle()["memur"]["donemler"])
     try:
-        donemler = yukle(int(donem.split("-")[0]))["memur"]["donemler"]
+        donemler = yukle(int(donem.split("-")[0])).get("memur", {}).get("donemler", {})
     except ValueError:
         donemler = {}
     kayit = donemler.get(donem, {})

@@ -20,19 +20,42 @@ mcp = MCPServer(
 
 
 @mcp.tool()
-def brutten_nete(brut: float, ay: int = 1, yil: int | None = None) -> dict[str, Any]:
+def brutten_nete(
+    brut: float,
+    ay: int = 1,
+    yil: int | None = None,
+    onceki_kumulatif_matrah: float | None = None,
+    gv_istisna_tutari: float = 0,
+) -> dict[str, Any]:
     """Aylık brüt ücretten net ücreti hesaplar (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası).
 
     ay: 1-12. Gelir vergisi kümülatif olduğundan yıl içinde ilerledikçe net düşebilir.
-    Yılbaşından beri aynı brüt ücretin alındığı varsayılır.
+    onceki_kumulatif_matrah: önceki aylarda birikmiş gelir vergisi matrahı. Kullanıcının bordrosu varsa
+    bordrodaki "kümülatif gelir vergisi matrahı" (bu ay dahil) eksi bu ayın "gelir vergisi matrahı" girilir;
+    böylece sonuç bordroyla birebir tutar. Verilmezse yılbaşından beri aynı brüt varsayılır.
+    Brüt ücret olarak bordrodaki "SGK matrahı" girilir (ücret + yol parası gibi SGK'ya tabi ödemeler;
+    ayni yemek yardımı hariç).
+    gv_istisna_tutari: SGK'ya tabi olup gelir vergisinden istisna tutar (ör. yol yardımı istisnası). Bordroda
+    gelir vergisi matrahı "SGK matrahı - SGK işçi - işsizlik işçi"den düşükse aradaki fark budur.
+    Desteklenen yıllar: guncel_parametreler ile görülebilir (geçmiş bordrolar için 2023 dahil).
     """
-    return maas.brutten_nete(brut, ay, yil)
+    return maas.brutten_nete(brut, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari)
 
 
 @mcp.tool()
-def netten_brute(net: float, ay: int = 1, yil: int | None = None) -> dict[str, Any]:
-    """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur."""
-    return maas.netten_brute(net, ay, yil)
+def netten_brute(
+    net: float,
+    ay: int = 1,
+    yil: int | None = None,
+    onceki_kumulatif_matrah: float | None = None,
+    gv_istisna_tutari: float = 0,
+) -> dict[str, Any]:
+    """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur.
+
+    onceki_kumulatif_matrah: önceki aylarda birikmiş gelir vergisi matrahı (bilinmiyorsa boş bırak).
+    gv_istisna_tutari: SGK'ya tabi olup gelir vergisinden istisna tutar (ör. yol yardımı istisnası).
+    """
+    return maas.netten_brute(net, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari)
 
 
 @mcp.tool()

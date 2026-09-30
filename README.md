@@ -42,6 +42,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 - "En düşük emekli aylığını alıyorum (20.000 TL), asıl aylığım 15.000 TL. Temmuz'da ne alacağım?"
 - "Brüt 50.000 TL maaşın Ocak ve Aralık'taki neti ne?"
 - "Eline net 60.000 TL geçmesi için brüt kaç olmalı?"
+- "Bordrom doğru mu? Kasım 2023, ücret kazançları 20.328,30 TL, kümülatif matrah 160.107,36 TL"
 - "Asgari ücretli bir çalışanın işverene maliyeti ne?"
 - "Asgari ücrete %25, %30 ya da %35 zam gelirse net ne olur?"
 - "Enflasyon önümüzdeki 6 ay ayda %2 olursa emekli zammı yüzde kaç olur?"
@@ -80,6 +81,24 @@ Claude Desktop'ı yeniden başlatın.
 claude mcp add zam-hesap -- uvx --from git+https://github.com/iscorpitx/hakan-veli zam-hesap-mcp
 ```
 
+## Gerçek bordroyla doğrulama
+
+Hesaplar gerçek işyeri bordrolarıyla kalem kalem karşılaştırılmıştır (yalnızca tutarlar):
+
+| Kalem | Kasım 2023 bordro | zam-hesap | Ağustos 2026 bordro | zam-hesap |
+|---|---|---|---|---|
+| SGK işçi | 2.845,96 | 2.845,96 | 7.713,16 | 7.713,16 |
+| İşsizlik işçi | 203,28 | 203,28 | 550,94 | 550,94 |
+| Gelir vergisi (istisna sonrası) | 1.882,87 | 1.882,87 | 2.762,46 | 2.762,46 |
+| Damga vergisi (istisna sonrası) | 52,47 | 52,47 | 167,46 | 167,46 |
+| **Net ödenecek** | **15.343,72** | **15.343,72** | **43.900,00** | **43.900,00** |
+
+Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
+- `brut`: bordrodaki **SGK matrahı** (ücret + yol parası gibi SGK'ya tabi ödemeler; ayni yemek hariç)
+- `ay` ve `yil`
+- `onceki_kumulatif_matrah`: "kümülatif gelir vergisi matrahı − bu ayın gelir vergisi matrahı"
+- `gv_istisna_tutari`: gelir vergisi matrahı "SGK matrahı − SGK işçi − işsizlik işçi"den düşükse aradaki fark (ör. yol yardımı istisnası)
+
 ## Desteklenen dönemler
 
 | Veri | Değer (2026) |
@@ -98,10 +117,11 @@ claude mcp add zam-hesap -- uvx --from git+https://github.com/iscorpitx/hakan-ve
 | Kamu işçisi çerçeve protokolü | 2026 ilk yarı %10 · ikinci yarı %6 (+ enflasyon farkı) |
 
 Tüm değerler [`src/zam_hesap/veriler/2026.yaml`](src/zam_hesap/veriler/2026.yaml) dosyasında, kaynaklarıyla birlikte durur.
+Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yaml`](src/zam_hesap/veriler/2023.yaml)) vardır; yıl içindeki iki asgari ücret dönemi dahil.
 
 ## Varsayımlar ve sınırlar
 
-- Çalışanın yılbaşından beri her ay aynı brüt ücreti aldığı varsayılır.
+- `onceki_kumulatif_matrah` verilmezse çalışanın yılbaşından beri her ay aynı brüt ücreti aldığı varsayılır.
 - Engellilik indirimi, BES, yan haklar, teşvikli istihdam gibi özel durumlar henüz yoktur.
 - Memur zammı, net maaşa toplam oranın uygulanmasıyla yaklaşık hesaplanır. Kişiye özel kalemler (aile/çocuk yardımı, vergi dilimi, Ocak 2026'daki 1.000 TL taban aylık artışı) nedeniyle gerçek tutar birkaç yüz TL farklı olabilir. Unvana göre tam memur bordrosu henüz yoktur.
 - Kıdem tazminatında küsurat ay/12 ve gün/365 olarak orantılanır. Tazminat hakkının doğup doğmadığı (istifa, haklı fesih vb.) araç tarafından değerlendirilmez.
