@@ -1,4 +1,4 @@
-import bpy, math
+import bpy, math, os
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -69,6 +69,6 @@ scene.cycles.samples = 96
 scene.cycles.use_denoising = True
 scene.render.resolution_x, scene.render.resolution_y = 1280, 720
 scene.view_settings.view_transform = "AgX"
-scene.render.filepath = "//blender_render.png"
+scene.render.filepath = os.path.join(os.path.expanduser("~"), "blender_render.png")
 bpy.ops.render.render(write_still=True)
 print("OK")
