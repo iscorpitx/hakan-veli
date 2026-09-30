@@ -1,0 +1,49 @@
+# 2026 yılı parametreleri.
+# Bu dosya her zam döneminde güncellenir; kodun değişmesi gerekmez.
+# Her değerin yanında kaynağı belirtilmiştir.
+
+yil: 2026
+
+asgari_ucret:
+  # 1 Ocak 2026'dan itibaren (yıl boyunca tek artış)
+  brut: 33030.00
+  kaynak: "Asgari Ücret Tespit Komisyonu kararı, 2026"
+
+sgk:
+  isci_orani: 0.14          # SGK işçi payı
+  issizlik_isci_orani: 0.01 # İşsizlik sigortası işçi payı
+  isveren_orani: 0.2175     # SGK işveren payı (1 Ocak 2026'dan itibaren %21,75)
+  issizlik_isveren_orani: 0.02
+  tesvik_puani:             # 5510/81-ı hazine desteği (puan)
+    yok: 0.0
+    genel: 0.02             # imalat dışı sektörler: 2 puan
+    imalat: 0.05            # imalat sektörü: 5 puan
+  tavan_katsayisi: 9        # prime esas kazanç üst sınırı = asgari brüt x 9
+  kaynak: "5510 sayılı Kanun; SGK 2026 tavan/taban duyurusu"
+
+damga_vergisi:
+  oran: 0.00759
+  kaynak: "488 sayılı Damga Vergisi Kanunu (1) sayılı tablo"
+
+gelir_vergisi:
+  # Ücret gelirleri tarifesi (GVK md. 103), 2026
+  # ust_sinir: null => son dilim
+  ucret_dilimleri:
+    - { ust_sinir: 190000, oran: 0.15 }
+    - { ust_sinir: 400000, oran: 0.20 }
+    - { ust_sinir: 1500000, oran: 0.27 }
+    - { ust_sinir: 5300000, oran: 0.35 }
+    - { ust_sinir: null, oran: 0.40 }
+  kaynak: "GVK 103. madde, 2026 yılı tarifesi (Hazine ve Maliye Bakanlığı tebliği)"
+
+emekli:
+  # SSK (4/a) ve Bağ-Kur (4/b) emeklileri: 6 aylık TÜFE artışı kadar zam
+  donemler:
+    "2026-01":
+      zam_orani: 0.1219
+      en_dusuk_aylik: 20000.00
+      kaynak: "TÜİK Temmuz-Aralık 2025 TÜFE; en düşük aylık Resmi Gazete düzenlemesi"
+    "2026-07":
+      zam_orani: 0.1776
+      en_dusuk_aylik: 23552.00
+      kaynak: "TÜİK Ocak-Haziran 2026 TÜFE; en düşük aylık düzenlemesi"
