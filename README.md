@@ -1,5 +1,7 @@
 # zam-hesap-mcp
 
+[![PyPI](https://img.shields.io/pypi/v/zam-hesap-mcp)](https://pypi.org/project/zam-hesap-mcp/)
+
 **Claude'a "emekli maaşım Temmuz'da ne kadar olur?" diye sorduğunuzda tahmin değil, kuruşu kuruşuna hesap.**
 
 Türkiye'de maaş, asgari ücret, emekli ve memur zammı, kıdem-ihbar tazminatı, yıllık izin ve fazla mesai hesaplarını yapan bir [MCP](https://modelcontextprotocol.io) sunucusu. Claude Desktop, Claude Code, Cursor ve MCP destekleyen diğer yapay zekâ asistanlarıyla çalışır.
@@ -70,18 +72,22 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
   "mcpServers": {
     "zam-hesap": {
       "command": "uvx",
-      "args": ["--from", "git+https://github.com/iscorpitx/hakan-veli", "zam-hesap-mcp"]
+      "args": ["zam-hesap-mcp"]
     }
   }
 }
 ```
 
-Claude Desktop'ı yeniden başlatın.
+Claude Desktop'ı yeniden başlatın. Microsoft Store'dan kurulan Claude'da dosya
+`%LOCALAPPDATA%\Packages\Claude_...\LocalCache\Roaming\Claude\claude_desktop_config.json` konumundadır;
+en kolayı Claude'da **Ayarlar → Developer → Edit Config** ile açmaktır.
+
+Güncelleme için: `uv cache clean zam-hesap-mcp` ve Claude'u yeniden başlatın.
 
 ### Claude Code
 
 ```bash
-claude mcp add zam-hesap -- uvx --from git+https://github.com/iscorpitx/hakan-veli zam-hesap-mcp
+claude mcp add zam-hesap -- uvx zam-hesap-mcp
 ```
 
 ## Gerçek bordroyla doğrulama
@@ -145,7 +151,7 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 - [ ] Unvana göre tam memur bordrosu (katsayılar, gösterge, ek gösterge, tazminatlar)
 - [x] Engellilik indirimi, BES, SGDP (emekli çalışan)
 - [ ] 2027 parametreleri (Ocak 2027'de)
-- [ ] PyPI yayını (`uvx zam-hesap-mcp`)
+- [x] PyPI yayını (`uvx zam-hesap-mcp`)
 
 ## Geliştirme
 
@@ -160,11 +166,11 @@ Hata bulursanız lütfen örnek bordro/hesapla birlikte [issue açın](https://g
 
 ## Yayınlama (PyPI)
 
-Paket PyPI'ye yüklendiğinde herkes `uvx zam-hesap-mcp` ile kurabilir. Bir kerelik ayar:
+Paket PyPI'de yayındadır. Yeni sürüm için `pyproject.toml` sürümünü artırıp GitHub'da `vX.Y.Z` etiketli bir Release yayımlamak yeterlidir; `publish.yml` testleri çalıştırıp paketi yükler. İlk kurulumda yapılan bir kerelik ayar:
 
 1. [pypi.org](https://pypi.org) hesabı açın.
 2. *Account → Publishing → Add a new pending publisher* bölümüne şunları girin: proje adı `zam-hesap-mcp`, sahip `iscorpitx`, depo `hakan-veli`, workflow `publish.yml`, environment `pypi`.
-3. GitHub'da *Releases → Draft a new release* ile `v0.2.0` etiketli bir sürüm yayımlayın. Testler geçerse paket otomatik yüklenir.
+3. GitHub'da *Releases → Draft a new release* ile `vX.Y.Z` etiketli bir sürüm yayımlayın. Testler geçerse paket otomatik yüklenir.
 
 ## Lisans
 
