@@ -19,11 +19,25 @@ sgk:
     genel: 0.02             # imalat dışı sektörler: 2 puan
     imalat: 0.05            # imalat sektörü: 5 puan
   tavan_katsayisi: 9        # prime esas kazanç üst sınırı = asgari brüt x 9
+  sgdp:                     # Sosyal güvenlik destek primi (emekli olup çalışanlar); işsizlik primi yok
+    isci_orani: 0.075
+    isveren_orani: 0.2475   # %22,5 SGDP + %2,25 kısa vadeli sigorta kolları
   kaynak: "5510 sayılı Kanun; SGK 2026 tavan/taban duyurusu"
 
 damga_vergisi:
   oran: 0.00759
   kaynak: "488 sayılı Damga Vergisi Kanunu (1) sayılı tablo"
+
+engellilik_indirimi:
+  # Aylık gelir vergisi matrahından düşülen tutar (GVK md. 31), derece: tutar
+  1: 12000.00
+  2: 7000.00
+  3: 3000.00
+  kaynak: "332 Seri No'lu Gelir Vergisi Genel Tebliği (RG 31.12.2025)"
+
+bes:
+  oran: 0.03                # otomatik katılım: SGK'ya esas kazancın %3'ü, netten kesilir, vergiden düşülmez
+  kaynak: "4632 sayılı Kanun ek md. 2"
 
 gelir_vergisi:
   # Ücret gelirleri tarifesi (GVK md. 103), 2026

@@ -26,6 +26,9 @@ def brutten_nete(
     yil: int | None = None,
     onceki_kumulatif_matrah: float | None = None,
     gv_istisna_tutari: float = 0,
+    sgdp: bool = False,
+    engellilik_derecesi: int | None = None,
+    bes: bool = False,
 ) -> dict[str, Any]:
     """Aylık brüt ücretten net ücreti hesaplar (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası).
 
@@ -38,8 +41,11 @@ def brutten_nete(
     gv_istisna_tutari: SGK'ya tabi olup gelir vergisinden istisna tutar (ör. yol yardımı istisnası). Bordroda
     gelir vergisi matrahı "SGK matrahı - SGK işçi - işsizlik işçi"den düşükse aradaki fark budur.
     Desteklenen yıllar: guncel_parametreler ile görülebilir (geçmiş bordrolar için 2023 dahil).
+    sgdp: emekli olup çalışıyorsa true (SGK yerine %7,5 SGDP, işsizlik primi yok).
+    engellilik_derecesi: 1, 2 veya 3 (aylık engellilik indirimi gelir vergisi matrahından düşülür).
+    bes: otomatik katılım BES kesintisi varsa true (%3, netten düşülür).
     """
-    return maas.brutten_nete(brut, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari)
+    return maas.brutten_nete(brut, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
 
 
 @mcp.tool()
@@ -49,28 +55,46 @@ def netten_brute(
     yil: int | None = None,
     onceki_kumulatif_matrah: float | None = None,
     gv_istisna_tutari: float = 0,
+    sgdp: bool = False,
+    engellilik_derecesi: int | None = None,
+    bes: bool = False,
 ) -> dict[str, Any]:
     """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur.
 
     onceki_kumulatif_matrah: önceki aylarda birikmiş gelir vergisi matrahı (bilinmiyorsa boş bırak).
     gv_istisna_tutari: SGK'ya tabi olup gelir vergisinden istisna tutar (ör. yol yardımı istisnası).
+    sgdp: emekli olup çalışıyorsa true (SGK yerine %7,5 SGDP, işsizlik primi yok).
+    engellilik_derecesi: 1, 2 veya 3 (aylık engellilik indirimi gelir vergisi matrahından düşülür).
+    bes: otomatik katılım BES kesintisi varsa true (%3, netten düşülür).
     """
-    return maas.netten_brute(net, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari)
+    return maas.netten_brute(net, ay, yil, onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
 
 
 @mcp.tool()
-def yillik_bordro(brut: float, yil: int | None = None) -> dict[str, Any]:
-    """Aynı brüt ücret için 12 aylık bordro tablosu ve yıllık toplamlar."""
-    return maas.yillik_bordro(brut, yil)
+def yillik_bordro(
+    brut: float,
+    yil: int | None = None,
+    sgdp: bool = False,
+    engellilik_derecesi: int | None = None,
+    bes: bool = False,
+) -> dict[str, Any]:
+    """Aynı brüt ücret için 12 aylık bordro tablosu ve yıllık toplamlar.
+
+    sgdp: emekli olup çalışıyorsa true (SGK yerine %7,5 SGDP, işsizlik primi yok).
+    engellilik_derecesi: 1, 2 veya 3 (aylık engellilik indirimi gelir vergisi matrahından düşülür).
+    bes: otomatik katılım BES kesintisi varsa true (%3, netten düşülür).
+    """
+    return maas.yillik_bordro(brut, yil, sgdp, engellilik_derecesi, bes)
 
 
 @mcp.tool()
-def isveren_maliyeti(brut: float, tesvik: str = "yok", yil: int | None = None) -> dict[str, Any]:
+def isveren_maliyeti(brut: float, tesvik: str = "yok", yil: int | None = None, sgdp: bool = False) -> dict[str, Any]:
     """Brüt ücretin işverene toplam aylık maliyeti.
 
     tesvik: "yok" (teşviksiz), "genel" (imalat dışı sektör, 2 puan indirim), "imalat" (5 puan indirim).
+    sgdp: emekli çalışan için true (SGDP işveren payı %24,75; teşvik ve işsizlik primi yok).
     """
-    return maas.isveren_maliyeti(brut, tesvik, yil)
+    return maas.isveren_maliyeti(brut, tesvik, yil, sgdp)
 
 
 @mcp.tool()
