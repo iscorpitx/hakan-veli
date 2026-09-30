@@ -6,7 +6,7 @@ from typing import Any
 
 from mcp.server.mcpserver import MCPServer
 
-from . import __version__, emekli, is_hukuku, maas, memur
+from . import __version__, emekli, is_hukuku, maas, memur, memur_maas
 from .parametreler import desteklenen_yillar, yukle
 
 mcp = MCPServer(
@@ -195,6 +195,39 @@ def memur_zam_senaryosu(
     """
     return memur.memur_zam_senaryosu(
         mevcut_net, tur, zam_oranlari_yuzde, toplu_sozlesme_yuzde, onceki_toplu_sozlesme_yuzde, alti_aylik_enflasyon_yuzde
+    )
+
+
+@mcp.tool()
+def memur_maasi(
+    derece: int,
+    kademe: int,
+    hizmet_yili: int,
+    unvan: str = "ogretmen",
+    kariyer: str | None = None,
+    emeklilik: str = "5510",
+    es_calismiyor: bool = False,
+    cocuk_72_ay_alti: int = 0,
+    cocuk_72_ay_ustu: int = 0,
+    ay: int = 7,
+    yil: int | None = None,
+    onceki_kumulatif_matrah: float | None = None,
+    sendika_aidati: float = 0,
+    bes: bool = False,
+) -> dict[str, Any]:
+    """Unvana göre memur maaşı: kalem kalem kazançlar, kesintiler ve net (şimdilik unvan: "ogretmen").
+
+    derece/kademe: kazanılmış hak aylığı (ör. 7/1). hizmet_yili: kıdem yılı.
+    kariyer: None, "uzman" (uzman öğretmen) veya "basogretmen".
+    emeklilik: "5510" (2008 ve sonrası göreve başlayan) veya "5434" (2008 öncesi, Emekli Sandığı).
+    es_calismiyor: eş çalışmıyorsa aile yardımı ödenir. cocuk_72_ay_alti / cocuk_72_ay_ustu: çocuk sayıları.
+    ay: maaş ayı (1-6 Ocak-Haziran, 7-12 Temmuz-Aralık katsayıları; vergi dilimi ve istisna için de kullanılır).
+    onceki_kumulatif_matrah: bordrodaki "geçen aylar vergi matrahı toplamı" (bilinmiyorsa boş).
+    Ek ders, fazla mesai, dil/makam tazminatı gibi kişiye özel ödemeler dahil değildir.
+    """
+    return memur_maas.memur_maasi(
+        derece, kademe, hizmet_yili, unvan, kariyer, emeklilik, es_calismiyor, cocuk_72_ay_alti,
+        cocuk_72_ay_ustu, ay, yil, onceki_kumulatif_matrah, sendika_aidati, bes,
     )
 
 

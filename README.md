@@ -24,6 +24,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 | `asgari_ucret_senaryosu` | "%25 zam gelirse?" gibi senaryolar: birden çok oran veya açıklanan net tutar için brüt, net, işveren maliyeti |
 | `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı; en düşük aylık desteği alanlar için asıl aylık üzerinden hesap |
 | `emekli_zam_senaryosu` | Gelecek emekli zammı için karşılaştırma: "%10, %15, %20 gelirse?" |
+| `memur_maasi` | **Unvana göre memur maaşı** (şimdilik öğretmen, uzman öğretmen, başöğretmen): derece/kademe, kıdem, aile yardımı, 5510/5434 kesintileri ile kalem kalem brüt ve net |
 | `memur_zammi` | Memur maaşı ve memur emeklisi (4/c) zammı |
 | `memur_zam_senaryosu` | Gelecek memur zammı: oranlarla ya da toplu sözleşme + enflasyon senaryolarıyla (enflasyon farkı dahil) |
 | `tis_zammi` | Belediye, kamu veya özel sektör işçisinin toplu sözleşme zammı: yeni brüt ve net |
@@ -52,6 +53,8 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 - "Asgari ücrete %25, %30 ya da %35 zam gelirse net ne olur?"
 - "Enflasyon önümüzdeki 6 ay ayda %2 olursa emekli zammı yüzde kaç olur?"
 - "Memurum, net maaşım 62.000 TL, Temmuz zammıyla ne olur?"
+- "7/1 derecede, 6 yıllık öğretmenim, 2010'da başladım, evliyim eşim çalışmıyor, 1 çocuğum var. Maaşım kalem kalem ne?"
+- "Uzman öğretmen olursam maaşım ne kadar artar?"
 - "Ocak'ta enflasyon %8, %10 ya da %12 çıkarsa memur zammı ne olur? Toplu sözleşme %5, önceki dönem %7."
 - "Emekli aylığım 25.000 TL, Ocak'ta %10, %13, %15 zam gelirse ne alırım?"
 - "Belediyede işçiyim, brüt 40.000 TL, TİS'te %10 ve %6 zam var, yeni netim ne?"
@@ -104,6 +107,10 @@ Hesaplar gerçek işyeri bordrolarıyla kalem kalem karşılaştırılmıştır 
 
 ✅ = zam-hesap sonucu bordroyla kuruşu kuruşuna aynı.
 
+**Memur (öğretmen) maaşı**, gerçek bir Şubat 2026 KBS öğretmen bordrosuyla (7/1, 5510) karşılaştırılmıştır: 9 kazanç kalemi,
+malullük-yaşlılık ve GSS primleri ve gelir vergisi matrahı (20.698,26) birebir aynıdır. Derece/kademe, uzman/başöğretmen
+ve 5434 (Emekli Sandığı) senaryoları memurlar.net maaş robotunun kazanç ve kesenek tutarlarıyla da doğrulanmıştır.
+
 Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
 - `brut`: bordrodaki **SGK matrahı** (ücret + yol parası gibi SGK'ya tabi ödemeler; ayni yemek hariç)
 - `ay` ve `yil`
@@ -130,6 +137,7 @@ Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
 | Memur / 4/c emekli zammı Temmuz 2026 | %13,52 (%7 toplu sözleşme + %6,09 enflasyon farkı) |
 | Kıdem tazminatı tavanı | Ocak–Haziran 64.948,77 TL · Temmuz–Aralık 73.729,87 TL |
 | Kamu işçisi çerçeve protokolü | 2026 ilk yarı %10 · ikinci yarı %6 (+ enflasyon farkı) |
+| Memur katsayıları | Ocak–Haziran: 1,387871 / 22,722793 / 0,440141 · Temmuz–Aralık: 1,575512 / 25,794915 / 0,499649 (aylık / taban / yan ödeme) |
 
 Tüm değerler [`src/zam_hesap/veriler/2026.yaml`](src/zam_hesap/veriler/2026.yaml) dosyasında, kaynaklarıyla birlikte durur.
 Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yaml`](src/zam_hesap/veriler/2023.yaml)) vardır; yıl içindeki iki asgari ücret dönemi dahil.
@@ -138,7 +146,8 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 
 - `onceki_kumulatif_matrah` verilmezse çalışanın yılbaşından beri her ay aynı brüt ücreti aldığı varsayılır.
 - Yan haklar, teşvikli istihdam (işsizden istihdam vb.) ve AGİ dönemi gibi özel durumlar yoktur.
-- Memur zammı, net maaşa toplam oranın uygulanmasıyla yaklaşık hesaplanır. Kişiye özel kalemler (aile/çocuk yardımı, vergi dilimi, Ocak 2026'daki 1.000 TL taban aylık artışı) nedeniyle gerçek tutar birkaç yüz TL farklı olabilir. Unvana göre tam memur bordrosu henüz yoktur.
+- `memur_zammi` net maaşa toplam oranı uygulayarak yaklaşık hesaplar; kesin hesap için `memur_maasi` kullanın.
+- `memur_maasi` şimdilik öğretmen unvanlarını kapsar. Ek ders ücreti, fazla mesai, dil/makam tazminatı, lojman gibi kişiye özel ödemeler dahil değildir.
 - Kıdem tazminatında küsurat ay/12 ve gün/365 olarak orantılanır. Tazminat hakkının doğup doğmadığı (istifa, haklı fesih vb.) araç tarafından değerlendirilmez.
 - İhbar tazminatı ve izin ücretinde gelir vergisi, verilen kümülatif matraha göre hesaplanır (varsayılan 0, yani %15).
 
@@ -148,7 +157,8 @@ Geçmiş bordroları kontrol etmek için 2023 maaş parametreleri de ([`2023.yam
 - [x] Kıdem ve ihbar tazminatı
 - [x] Belediye / kamu işçisi TİS zammı
 - [x] Yıllık izin, izin ücreti, fazla mesai, tatil mesaisi
-- [ ] Unvana göre tam memur bordrosu (katsayılar, gösterge, ek gösterge, tazminatlar)
+- [x] Unvana göre memur maaşı: öğretmen, uzman öğretmen, başöğretmen
+- [ ] Diğer unvanlar: polis, hemşire, genel idare memuru, zabıta…
 - [x] Engellilik indirimi, BES, SGDP (emekli çalışan)
 - [ ] 2027 parametreleri (Ocak 2027'de)
 - [x] PyPI yayını (`uvx zam-hesap-mcp`)
