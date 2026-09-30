@@ -76,3 +76,34 @@ def test_hatali_girdiler():
         maas.isveren_maliyeti(50000, "bilinmeyen", 2026)
     with pytest.raises(ValueError):
         maas.brutten_nete(50000, 1, 1999)
+
+
+def test_asgari_ucret_senaryosu_oranlar():
+    s = maas.asgari_ucret_senaryosu([25, 30], yil=2026)
+    assert s["mevcut"] == {"brut": 33030.00, "net": 28075.50}
+    yuzde25, yuzde30 = s["senaryolar"]
+    assert yuzde25["brut"] == 41287.50
+    assert yuzde25["net"] == 35094.37  # 41.287,50 - 5.780,25 SGK - 412,88 işsizlik
+    assert yuzde25["net_artis"] == 7018.87
+    assert yuzde25["isveren_maliyeti_tesviksiz"] == 51093.28
+    assert yuzde30["brut"] == 42939.00
+
+
+def test_asgari_ucret_senaryosu_net_tutar():
+    s = maas.asgari_ucret_senaryosu(yeni_netler=[35000], yil=2026)
+    sen = s["senaryolar"][0]
+    assert sen["net"] == pytest.approx(35000, abs=0.01)
+    assert sen["brut"] == 41176.47
+    assert sen["zam_orani_yuzde"] == 24.66
+
+
+def test_asgari_ucret_senaryosu_mevcut_ile_tutarli():
+    # %0 senaryosu, bordro hesabıyla aynı neti vermeli
+    sen = maas.asgari_ucret_senaryosu([0], yil=2026)["senaryolar"][0]
+    assert sen["net"] == maas.asgari_ucret(2026)["net"]
+    assert sen["isveren_maliyeti_tesviksiz"] == maas.asgari_ucret(2026)["isveren_maliyeti"]["yok"]
+
+
+def test_asgari_ucret_senaryosu_bos():
+    with pytest.raises(ValueError):
+        maas.asgari_ucret_senaryosu()

@@ -173,3 +173,55 @@ def asgari_ucret(yil: int | None = None) -> dict[str, Any]:
         "isveren_maliyeti": {t: isveren_maliyeti(brut, t, p["yil"])["toplam_maliyet"] for t in p["sgk"]["tesvik_puani"]},
         "kaynak": p["asgari_ucret"]["kaynak"],
     }
+
+
+def _yuzde(oran: Decimal) -> str:
+    return f"{float(oran) * 100:g}".replace(".", ",")
+
+
+def asgari_ucret_senaryosu(
+    zam_oranlari_yuzde: list[float] | None = None,
+    yeni_netler: list[float] | None = None,
+    yil: int | None = None,
+) -> dict[str, Any]:
+    """Asgari ücrete gelecek zam için senaryolar (ör. %20, %25, %30...).
+
+    Zam oranı ya da açıklanan yeni net tutar verilebilir. Hesap, verilen yılın (varsayılan: en güncel)
+    SGK ve vergi kurallarıyla yapılır; asgari ücretin vergi istisnasının süreceği varsayılır.
+    """
+    if not zam_oranlari_yuzde and not yeni_netler:
+        raise ValueError("zam_oranlari_yuzde veya yeni_netler verilmeli")
+    p = yukle(yil)
+    sgk = p["sgk"]
+    mevcut_brut = d(p["asgari_ucret"]["brut"])
+    kesinti_orani = d(sgk["isci_orani"]) + d(sgk["issizlik_isci_orani"])
+    isveren_orani = d(sgk["isveren_orani"]) + d(sgk["issizlik_isveren_orani"])
+    mevcut_net = mevcut_brut - yuvarla(mevcut_brut * d(sgk["isci_orani"])) - yuvarla(mevcut_brut * d(sgk["issizlik_isci_orani"]))
+
+    def satir(brut: Decimal, oran: Decimal) -> dict[str, Any]:
+        sgk_isci = yuvarla(brut * d(sgk["isci_orani"]))
+        issizlik = yuvarla(brut * d(sgk["issizlik_isci_orani"]))
+        net = brut - sgk_isci - issizlik
+        maliyet = brut + yuvarla(brut * d(sgk["isveren_orani"])) + yuvarla(brut * d(sgk["issizlik_isveren_orani"]))
+        return {
+            "zam_orani_yuzde": float(yuvarla(oran * 100)),
+            "brut": float(brut),
+            "net": float(net),
+            "net_artis": float(net - mevcut_net),
+            "isveren_maliyeti_tesviksiz": float(maliyet),
+        }
+
+    senaryolar = [satir(yuvarla(mevcut_brut * (1 + d(o) / 100)), d(o) / 100) for o in zam_oranlari_yuzde or []]
+    for net in yeni_netler or []:
+        brut = yuvarla(d(net) / (1 - kesinti_orani))
+        senaryolar.append(satir(brut, brut / mevcut_brut - 1))
+
+    return {
+        "baz_yil": p["yil"],
+        "mevcut": {"brut": float(mevcut_brut), "net": float(mevcut_net)},
+        "senaryolar": senaryolar,
+        "not": (
+            f"Tahmindir. {p['yil']} yılı SGK oranlarıyla (işçi %{_yuzde(kesinti_orani)}, işveren "
+            f"%{_yuzde(isveren_orani)}) ve asgari ücretin vergiden istisna kalacağı varsayımıyla hesaplandı."
+        ),
+    }

@@ -55,24 +55,33 @@ def _kesintiler(brut: Decimal, onceki_kumulatif_matrah: Decimal, p: dict[str, An
     return {"gelir_vergisi": gv, "damga_vergisi": damga, "net": brut - gv - damga}
 
 
-def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str) -> dict[str, Any]:
+def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str, tavan: float | None = None) -> dict[str, Any]:
     """Kıdem tazminatı. giydirilmis_brut: son brüt ücret + düzenli yan ödemeler (yemek, yol, ikramiye payı vb.).
 
     En az 1 yıl çalışma gerekir. Her tam yıl için 30 günlük ücret, artan süre orantılı eklenir.
     Tavan çıkış tarihindeki döneme göre uygulanır. Kıdem tazminatından yalnızca damga vergisi kesilir.
+    tavan: kayıtlı olmayan (ileri tarihli) dönemler veya senaryo için tavan tutarı.
     """
     c = _tarih(cikis)
     sure = hizmet_suresi(giris, c)
-    p = yukle(c.year)
-    tavanlar = p["kidem_tazminati"]["tavan"]
     donem = _donem(c)
-    if donem not in tavanlar:
-        raise ValueError(f"{donem} dönemi için kıdem tavanı kayıtlı değil. Kayıtlı: {sorted(tavanlar)}")
-    tavan = d(tavanlar[donem])
+    tahmini = tavan is not None
+    try:
+        p = yukle(c.year)
+    except ValueError:
+        if not tahmini:
+            raise ValueError(f"{c.year} yılı için veri yok; tahmini hesap için tavan verin.") from None
+        p = yukle()
+    tavanlar = p["kidem_tazminati"]["tavan"]
+    if not tahmini and donem not in tavanlar:
+        raise ValueError(f"{donem} dönemi için kıdem tavanı kayıtlı değil; tahmini hesap için tavan verin. Kayıtlı: {sorted(tavanlar)}")
+    tavan = d(tavan) if tahmini else d(tavanlar[donem])
     ucret = d(giydirilmis_brut)
     esas = min(ucret, tavan)
 
     sonuc: dict[str, Any] = {"hizmet_suresi": sure, "giydirilmis_brut": float(ucret), "tavan": float(tavan), "esas_ucret": float(esas)}
+    if tahmini:
+        sonuc["tavan_kaynagi"] = "kullanıcı tahmini"
     if sure["yil"] < 1:
         return {**sonuc, "brut_tazminat": 0.0, "damga_vergisi": 0.0, "net_tazminat": 0.0, "not": "Kıdem tazminatı için en az 1 yıl çalışma gerekir."}
 

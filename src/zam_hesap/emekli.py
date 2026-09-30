@@ -106,3 +106,51 @@ def emekli_zammi(
     if notlar:
         sonuc["not"] = " ".join(notlar)
     return sonuc
+
+
+def emekli_zam_senaryosu(
+    mevcut_aylik: float,
+    zam_oranlari_yuzde: list[float],
+    asil_aylik: float | None = None,
+    en_dusuk_aylik: float | None = None,
+) -> dict[str, Any]:
+    """Gelecek emekli zammı için birden çok oranla karşılaştırma tablosu.
+
+    en_dusuk_aylik: yeni en düşük aylık biliniyorsa. Verilmezse mevcut en düşük aylığın da aynı
+    oranda artacağı varsayılır (Temmuz 2026'da böyle oldu: 20.000 x 1,1776 = 23.552).
+    """
+    if not zam_oranlari_yuzde:
+        raise ValueError("en az bir zam oranı verilmeli")
+    aylik = d(mevcut_aylik)
+    esas = d(asil_aylik) if asil_aylik is not None else aylik
+    if aylik <= 0 or esas <= 0 or esas > aylik:
+        raise ValueError("aylık tutarları pozitif olmalı; asil_aylik mevcut_aylik'tan büyük olamaz")
+    p = yukle()
+    mevcut_en_dusuk = d(p["emekli"]["donemler"][max(p["emekli"]["donemler"])]["en_dusuk_aylik"])
+
+    senaryolar = []
+    for oran_yuzde in zam_oranlari_yuzde:
+        oran = d(oran_yuzde) / 100
+        zamli = yuvarla(esas * (1 + oran))
+        yeni_en_dusuk = d(en_dusuk_aylik) if en_dusuk_aylik is not None else yuvarla(mevcut_en_dusuk * (1 + oran))
+        odenecek = max(zamli, yeni_en_dusuk)
+        senaryolar.append({
+            "zam_orani_yuzde": float(oran_yuzde),
+            "zamli_aylik": float(zamli),
+            "en_dusuk_aylik": float(yeni_en_dusuk),
+            "odenecek_tutar": float(odenecek),
+            "gercek_artis": float(odenecek - aylik),
+            "tamamlama_var": zamli < yeni_en_dusuk,
+        })
+    sonuc: dict[str, Any] = {"mevcut_aylik": float(aylik), "senaryolar": senaryolar}
+    if asil_aylik is not None:
+        sonuc["asil_aylik"] = float(esas)
+    if en_dusuk_aylik is not None:
+        sonuc["not"] = "Tahmindir. Yeni en düşük aylık kullanıcıdan alındı."
+    else:
+        tutar = f"{float(mevcut_en_dusuk):,.0f}".replace(",", ".")
+        sonuc["not"] = (
+            f"Tahmindir. Yeni en düşük aylığın mevcut {tutar} TL'nin aynı oranda artacağı varsayıldı; "
+            "yasal düzenlemeyle farklı belirlenebilir."
+        )
+    return sonuc

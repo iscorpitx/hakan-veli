@@ -115,3 +115,19 @@ def test_kamu_isci_protokolu():
     p = h.kamu_isci_protokolu(2026)
     assert p["donemler"]["2026-01"]["zam_orani"] == 0.10
     assert p["donemler"]["2026-07"]["zam_orani"] == 0.06
+
+
+def test_kidem_ileri_tarih_tahmini_tavan():
+    s = h.kidem_tazminati(90000, "2020-03-01", "2027-03-01", tavan=80000)
+    assert s["tavan_kaynagi"] == "kullanıcı tahmini"
+    assert s["brut_tazminat"] == 560000.00  # 7 yıl x 80.000
+
+
+def test_kidem_ileri_tarih_tavansiz_hata():
+    with pytest.raises(ValueError, match="tavan"):
+        h.kidem_tazminati(90000, "2020-03-01", "2027-03-01")
+
+
+def test_kidem_tavan_senaryosu_kayitli_donemde():
+    s = h.kidem_tazminati(100000, "2020-01-01", "2026-01-01", tavan=70000)
+    assert s["esas_ucret"] == 70000.00

@@ -19,12 +19,15 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 | `yillik_bordro` | 12 aylık bordro tablosu ve yıllık toplamlar |
 | `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan) |
 | `asgari_ucret` | Asgari ücretin brüt, net ve işveren maliyeti |
+| `asgari_ucret_senaryosu` | "%25 zam gelirse?" gibi senaryolar: birden çok oran veya açıklanan net tutar için brüt, net, işveren maliyeti |
 | `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı; en düşük aylık desteği alanlar için asıl aylık üzerinden hesap |
+| `emekli_zam_senaryosu` | Gelecek emekli zammı için karşılaştırma: "%10, %15, %20 gelirse?" |
 | `memur_zammi` | Memur maaşı ve memur emeklisi (4/c) zammı |
+| `memur_zam_senaryosu` | Gelecek memur zammı: oranlarla ya da toplu sözleşme + enflasyon senaryolarıyla (enflasyon farkı dahil) |
 | `tis_zammi` | Belediye, kamu veya özel sektör işçisinin toplu sözleşme zammı: yeni brüt ve net |
 | `kamu_isci_protokolu` | Kamu işçisi çerçeve protokolü zam oranları |
 | `kumulatif_enflasyon` | Aylık enflasyonlardan birikimli oran (zam tahmini için) |
-| `kidem_tazminati` | Kıdem tazminatı (tavan, küsurat, damga vergisi) |
+| `kidem_tazminati` | Kıdem tazminatı (tavan, küsurat, damga vergisi); ileri tarihli çıkış için tahmini tavan |
 | `ihbar_tazminati` | İhbar süresi ve tazminatı (gelir ve damga vergisi dahil) |
 | `hizmet_suresi` | İki tarih arası çalışma süresi |
 | `yillik_izin` | Yıllık izin gün sayısı (yaş ve yer altı kuralları dahil) |
@@ -40,8 +43,11 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 - "Brüt 50.000 TL maaşın Ocak ve Aralık'taki neti ne?"
 - "Eline net 60.000 TL geçmesi için brüt kaç olmalı?"
 - "Asgari ücretli bir çalışanın işverene maliyeti ne?"
+- "Asgari ücrete %25, %30 ya da %35 zam gelirse net ne olur?"
 - "Enflasyon önümüzdeki 6 ay ayda %2 olursa emekli zammı yüzde kaç olur?"
 - "Memurum, net maaşım 62.000 TL, Temmuz zammıyla ne olur?"
+- "Ocak'ta enflasyon %8, %10 ya da %12 çıkarsa memur zammı ne olur? Toplu sözleşme %5, önceki dönem %7."
+- "Emekli aylığım 25.000 TL, Ocak'ta %10, %13, %15 zam gelirse ne alırım?"
 - "Belediyede işçiyim, brüt 40.000 TL, TİS'te %10 ve %6 zam var, yeni netim ne?"
 - "2019 Mart'ta girdim, bu ay çıkarıldım, giydirilmiş brütüm 55.000 TL. Kıdem ve ihbar ne kadar?"
 - "8 yıllık çalışanım, kaç gün yıllık iznim var?"
