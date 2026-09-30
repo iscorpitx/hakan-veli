@@ -90,3 +90,42 @@ kamu_isci:
     "2026-07": { zam_orani: 0.06 }
   not: "Dönem enflasyonu zam oranını aşarsa fark ocak ayında ücrete yansıtılır."
   kaynak: "ÇSGB, 2025-2026 Dönemi Kamu TİS Çerçeve Protokolü"
+
+memur_maasi:
+  # 657 sayılı DMK; Hazine ve Maliye Bakanlığı katsayı genelgeleri (Ocak-Haziran ve 5 Sıra No'lu Temmuz-Aralık 2026)
+  donemler:                   # ay: o aydan itibaren geçerli katsayılar
+    - { ay: 1, aylik_katsayi: 1.387871, taban_aylik_katsayisi: 22.722793, yan_odeme_katsayisi: 0.440141 }
+    - { ay: 7, aylik_katsayi: 1.575512, taban_aylik_katsayisi: 25.794915, yan_odeme_katsayisi: 0.499649 }
+  gosterge_tablosu:           # derece: kademe 1, 2, ... göstergeleri (657 DMK md. 43)
+      1: [1320, 1380, 1440, 1500]
+      2: [1155, 1210, 1265, 1320, 1380, 1440]
+      3: [1020, 1065, 1110, 1155, 1210, 1265, 1320, 1380]
+      4: [915, 950, 985, 1020, 1065, 1110, 1155, 1210, 1265]
+      5: [835, 865, 895, 915, 950, 985, 1020, 1065, 1110]
+      6: [760, 785, 810, 835, 865, 895, 915, 950, 985]
+      7: [705, 720, 740, 760, 785, 810, 835, 865, 895]
+      8: [660, 675, 690, 705, 720, 740, 760, 785, 810]
+      9: [620, 630, 645, 660, 675, 690, 705, 720, 740]
+  taban_aylik_gostergesi: 1000
+  kidem_gostergesi_yil_basina: 20
+  kidem_azami_yil: 25
+  tazminat_tabani_gostergesi: 9500   # en yüksek devlet memuru aylığı (1500 + 8000); ÖHT, ek ödeme ve kariyer tazminatı buna oranlanır
+  aile_yardimi:
+    es_gostergesi: 2273
+    cocuk_72_ay_alti_gostergesi: 500
+    cocuk_72_ay_ustu_gostergesi: 250
+  kesintiler:
+    sgk_5510: { gss: 0.05, malulluk_yaslilik: 0.09 }   # 2008 sonrası girenler
+    emekli_kesenegi_5434: 0.16                          # 2008 öncesi girenler
+  unvanlar:
+    ogretmen:
+      ad: "Öğretmen (lisans)"
+      ek_gosterge: {1: 3600, 2: 3000, 3: 2200, 4: 2100, 5: 1800, 6: 1700, 7: 1500, 8: 1400, 9: 0}
+      ozel_hizmet_tazminati: {1: 1.2056, 2: 1.2056, 3: 1.1556, 4: 1.1556, 5: 1.0556, 6: 1.0556, 7: 1.0556, 8: 1.0556, 9: 1.0556}
+      ek_odeme: 0.65
+      yan_odeme_puani: 750
+      ilave_seyyanen_gostergesi: 15965
+      kariyer_tazminati: {uzman: 0.60, basogretmen: 1.20}
+      # 5434'lülerde emekli keseneği matrahına eklenen tazminat oranı (ek göstergeye göre)
+      kesenek_tazminat_orani: [{ek_gosterge_en_az: 3600, oran: 1.45}, {ek_gosterge_en_az: 3000, oran: 0.85}, {ek_gosterge_en_az: 0, oran: 0.55}]
+  kaynak: "HMB 5 Sıra No'lu Genelge; 657 DMK; unvan oranları memurlar.net maaş robotu (Eylül 2026) ile doğrulandı"
