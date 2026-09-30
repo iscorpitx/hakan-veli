@@ -33,3 +33,34 @@ def test_senaryo_ve_hatalar():
         memur.memur_zammi(50000, "memur", "2027-01")
     with pytest.raises(ValueError):
         memur.memur_zammi(50000, "bilinmeyen", "2026-07")
+
+
+def test_memur_zam_formulu_temmuz_2026_resmi():
+    # Önceki dönem toplu sözleşme %11, Ocak-Haziran 2026 enflasyonu %17,76, yeni dönem %7
+    s = memur.memur_zam_senaryosu(
+        60000, toplu_sozlesme_yuzde=7, onceki_toplu_sozlesme_yuzde=11, alti_aylik_enflasyon_yuzde=[17.76]
+    )
+    sen = s["senaryolar"][0]
+    assert sen["enflasyon_farki_yuzde"] == 6.09
+    assert sen["toplam_zam_yuzde"] == 13.52  # resmi Temmuz 2026 oranı
+
+
+def test_memur_enflasyon_toplu_sozlesmenin_altinda():
+    s = memur.memur_zam_senaryosu(
+        50000, "emekli", toplu_sozlesme_yuzde=5, onceki_toplu_sozlesme_yuzde=7, alti_aylik_enflasyon_yuzde=[4]
+    )
+    sen = s["senaryolar"][0]
+    assert sen["enflasyon_farki_yuzde"] == 0
+    assert sen["zamli_net"] == 52500.00
+
+
+def test_memur_zam_senaryosu_dogrudan_oranlar():
+    s = memur.memur_zam_senaryosu(60000, zam_oranlari_yuzde=[10, 20])
+    assert [x["zamli_net"] for x in s["senaryolar"]] == [66000.00, 72000.00]
+
+
+def test_memur_zam_senaryosu_eksik_girdi():
+    with pytest.raises(ValueError):
+        memur.memur_zam_senaryosu(60000)
+    with pytest.raises(ValueError):
+        memur.memur_zam_senaryosu(60000, alti_aylik_enflasyon_yuzde=[10])

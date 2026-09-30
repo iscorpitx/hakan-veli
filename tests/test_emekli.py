@@ -76,3 +76,30 @@ def test_normal_emekliye_uyari_yok():
 def test_asil_aylik_hatali():
     with pytest.raises(ValueError):
         emekli.emekli_zammi(20000, "2026-07", asil_aylik=25000)
+
+
+def test_emekli_zam_senaryosu_karsilastirma():
+    s = emekli.emekli_zam_senaryosu(30000, [10, 15])
+    on, onbes = s["senaryolar"]
+    assert on["zamli_aylik"] == 33000.00
+    assert on["en_dusuk_aylik"] == 25907.20  # 23.552 x 1,10
+    assert on["odenecek_tutar"] == 33000.00
+    assert not on["tamamlama_var"]
+    assert onbes["zamli_aylik"] == 34500.00
+    assert "23.552" in s["not"]
+
+
+def test_emekli_zam_senaryosu_asil_aylik_ve_en_dusuk():
+    s = emekli.emekli_zam_senaryosu(23552, [12], asil_aylik=16000, en_dusuk_aylik=27000)
+    sen = s["senaryolar"][0]
+    assert sen["zamli_aylik"] == 17920.00
+    assert sen["odenecek_tutar"] == 27000.00
+    assert sen["gercek_artis"] == 3448.00
+    assert sen["tamamlama_var"]
+
+
+def test_emekli_zam_senaryosu_hatalar():
+    with pytest.raises(ValueError):
+        emekli.emekli_zam_senaryosu(20000, [])
+    with pytest.raises(ValueError):
+        emekli.emekli_zam_senaryosu(20000, [10], asil_aylik=30000)

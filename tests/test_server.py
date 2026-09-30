@@ -13,6 +13,8 @@ BEKLENEN_ARACLAR = {
     "kumulatif_enflasyon",
     "guncel_parametreler",
     "memur_zammi",
+    "memur_zam_senaryosu",
+    "emekli_zam_senaryosu",
     "kidem_tazminati",
     "ihbar_tazminati",
     "hizmet_suresi",

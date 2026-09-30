@@ -89,6 +89,22 @@ def emekli_zammi(
 
 
 @mcp.tool()
+def emekli_zam_senaryosu(
+    mevcut_aylik: float,
+    zam_oranlari_yuzde: list[float],
+    asil_aylik: float | None = None,
+    en_dusuk_aylik: float | None = None,
+) -> dict[str, Any]:
+    """Gelecek SSK/Bağ-Kur emekli zammı için karşılaştırma: "%10, %15, %20 gelirse ne alırım?"
+
+    Birden çok oranı tek çağrıda ver. asil_aylik: en düşük aylık desteği alanlar için desteksiz aylık.
+    en_dusuk_aylik: yeni en düşük aylık biliniyorsa (yoksa aynı oranda artacağı varsayılır).
+    Oran bilinmiyorsa önce kumulatif_enflasyon ile aylık enflasyon tahminlerinden hesapla.
+    """
+    return emekli.emekli_zam_senaryosu(mevcut_aylik, zam_oranlari_yuzde, asil_aylik, en_dusuk_aylik)
+
+
+@mcp.tool()
 def kumulatif_enflasyon(aylik_oranlar_yuzde: list[float]) -> dict[str, Any]:
     """Aylık enflasyon oranlarından (yüzde) birikimli artışı hesaplar. Emekli zammı tahmini için kullanılır."""
     return emekli.kumulatif_enflasyon(aylik_oranlar_yuzde)
@@ -107,11 +123,34 @@ def memur_zammi(
 
 
 @mcp.tool()
-def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str) -> dict[str, Any]:
+def memur_zam_senaryosu(
+    mevcut_net: float,
+    tur: str = "memur",
+    zam_oranlari_yuzde: list[float] | None = None,
+    toplu_sozlesme_yuzde: float | None = None,
+    onceki_toplu_sozlesme_yuzde: float | None = None,
+    alti_aylik_enflasyon_yuzde: list[float] | None = None,
+) -> dict[str, Any]:
+    """Gelecek memur / memur emeklisi (4/c) zammı için karşılaştırma tablosu.
+
+    tur: "memur" veya "emekli".
+    zam_oranlari_yuzde: doğrudan toplam oranlar, ör. [10, 15, 20].
+    Ya da enflasyon senaryosu: toplu_sozlesme_yuzde (yeni dönem), onceki_toplu_sozlesme_yuzde (biten dönem)
+    ve alti_aylik_enflasyon_yuzde (ör. [8, 10, 12]) verilir; enflasyon farkı dahil toplam zam hesaplanır.
+    """
+    return memur.memur_zam_senaryosu(
+        mevcut_net, tur, zam_oranlari_yuzde, toplu_sozlesme_yuzde, onceki_toplu_sozlesme_yuzde, alti_aylik_enflasyon_yuzde
+    )
+
+
+@mcp.tool()
+def kidem_tazminati(giydirilmis_brut: float, giris: str, cikis: str, tavan: float | None = None) -> dict[str, Any]:
     """Kıdem tazminatı. Tarihler YYYY-AA-GG. giydirilmis_brut: son brüt ücret + düzenli yan ödemeler
     (yemek, yol, ikramiyenin aylık payı vb.). Tavan çıkış tarihine göre uygulanır; yalnızca damga vergisi kesilir.
+    tavan: kayıtlı olmayan ileri tarihli çıkışlar veya senaryo için tahmini tavan (tavan her dönem memur zammı
+    oranında artar).
     """
-    return is_hukuku.kidem_tazminati(giydirilmis_brut, giris, cikis)
+    return is_hukuku.kidem_tazminati(giydirilmis_brut, giris, cikis, tavan)
 
 
 @mcp.tool()
