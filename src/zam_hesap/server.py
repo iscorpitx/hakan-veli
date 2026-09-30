@@ -58,14 +58,20 @@ def asgari_ucret(yil: int | None = None) -> dict[str, Any]:
 
 @mcp.tool()
 def emekli_zammi(
-    mevcut_aylik: float, donem: str | None = None, zam_orani_yuzde: float | None = None
+    mevcut_aylik: float,
+    donem: str | None = None,
+    zam_orani_yuzde: float | None = None,
+    asil_aylik: float | None = None,
 ) -> dict[str, Any]:
     """SSK/Bağ-Kur emeklisinin zamlı aylığını hesaplar.
 
+    mevcut_aylik: şu an eline geçen aylık.
     donem: "2026-01", "2026-07" gibi. Verilmezse en son dönem.
     zam_orani_yuzde: kayıtlı oran yerine senaryo/tahmin oranı kullanmak için (ör. 15.5).
+    asil_aylik: en düşük aylık desteği alanlar için desteksiz asıl aylık. Kullanıcı en düşük aylığı
+        alıyorsa (ör. 20.000 TL) asıl aylığını sor; zam asıl aylığa uygulanır.
     """
-    return emekli.emekli_zammi(mevcut_aylik, donem, zam_orani_yuzde)
+    return emekli.emekli_zammi(mevcut_aylik, donem, zam_orani_yuzde, asil_aylik)
 
 
 @mcp.tool()

@@ -25,54 +25,84 @@ def kumulatif_enflasyon(aylik_oranlar_yuzde: list[float]) -> dict[str, Any]:
     }
 
 
+def _onceki_donem(donem: str) -> str:
+    yil, ay = donem.split("-")
+    return f"{yil}-01" if ay == "07" else f"{int(yil) - 1}-07"
+
+
+def _donemler(yil: int) -> dict[str, Any]:
+    try:
+        return yukle(yil)["emekli"]["donemler"]
+    except ValueError:
+        return {}  # veri dosyası olmayan (ör. gelecek) yıl
+
+
 def emekli_zammi(
     mevcut_aylik: float,
     donem: str | None = None,
     zam_orani_yuzde: float | None = None,
+    asil_aylik: float | None = None,
 ) -> dict[str, Any]:
     """Mevcut aylığa dönemin zammını uygular.
 
+    mevcut_aylik: şu an eline geçen aylık.
     donem: "YYYY-01" veya "YYYY-07". Verilmezse en son kayıtlı dönem kullanılır.
     zam_orani_yuzde: verilirse kayıtlı oran yerine bu oran kullanılır (tahmin/senaryo için).
+    asil_aylik: en düşük aylık desteği alanlar için desteksiz (bağlanan) aylık. Zam bu tutara
+        uygulanır, sonra yeni en düşük aylığa tamamlanır. e-Devlet'te "aylık tutarı" olarak görülür.
     """
     aylik = d(mevcut_aylik)
     if aylik <= 0:
         raise ValueError("mevcut_aylik pozitif olmalı")
+    asil = d(asil_aylik) if asil_aylik is not None else None
+    if asil is not None and not 0 < asil <= aylik:
+        raise ValueError("asil_aylik pozitif olmalı ve mevcut_aylik'tan büyük olmamalı")
 
-    kayit: dict[str, Any] = {}
     if donem is None:
-        p = yukle()
-        donem = max(p["emekli"]["donemler"])
-    try:
-        donemler = yukle(int(donem.split("-")[0]))["emekli"]["donemler"]
-    except ValueError:
-        donemler = {}  # veri dosyası olmayan (ör. gelecek) yıl: yalnızca senaryo hesabı yapılabilir
-    if donem in donemler:
-        kayit = donemler[donem]
-    elif zam_orani_yuzde is None:
+        donem = max(yukle()["emekli"]["donemler"])
+    donemler = _donemler(int(donem.split("-")[0]))
+    kayit: dict[str, Any] = donemler.get(donem, {})
+    senaryo = zam_orani_yuzde is not None
+    if not kayit and not senaryo:
         raise ValueError(f"{donem} dönemi için kayıtlı oran yok; zam_orani_yuzde verin. Kayıtlı dönemler: {sorted(donemler)}")
 
-    senaryo = zam_orani_yuzde is not None
     oran = d(zam_orani_yuzde) / 100 if senaryo else d(kayit["zam_orani"])
-    zamli = yuvarla(aylik * (1 + oran))
+    esas = asil if asil is not None else aylik
+    zamli = yuvarla(esas * (1 + oran))
 
     sonuc: dict[str, Any] = {
         "donem": donem,
         "mevcut_aylik": float(aylik),
         "zam_orani_yuzde": float(oran * 100),
-        "zam_tutari": float(zamli - aylik),
+    }
+    if asil is not None:
+        sonuc["asil_aylik"] = float(asil)
+    sonuc.update({
+        "zam_tutari": float(zamli - esas),
         "zamli_aylik": float(zamli),
         "kaynak": "kullanıcı senaryosu" if senaryo else kayit["kaynak"],
-    }
+    })
+
     en_dusuk = kayit.get("en_dusuk_aylik")
-    if en_dusuk is not None and not senaryo:
-        sonuc["en_dusuk_aylik"] = float(en_dusuk)
-        if zamli < d(en_dusuk):
-            sonuc["odenecek_tutar"] = float(en_dusuk)
-            sonuc["not"] = (
-                "Zamlı aylık en düşük emekli aylığının altında kaldığı için ödeme en düşük tutara "
-                "tamamlanır (tüm SSK/Bağ-Kur aylıklarının toplamı dikkate alınır)."
-            )
-        else:
-            sonuc["odenecek_tutar"] = float(zamli)
+    if en_dusuk is None or senaryo:
+        return sonuc
+
+    odenecek = max(zamli, d(en_dusuk))
+    sonuc["en_dusuk_aylik"] = float(en_dusuk)
+    sonuc["odenecek_tutar"] = float(odenecek)
+    sonuc["gercek_artis"] = float(odenecek - aylik)
+    notlar = []
+    if zamli < d(en_dusuk):
+        notlar.append(
+            "Zamlı aylık en düşük emekli aylığının altında kaldığı için ödeme en düşük tutara "
+            "tamamlanır (tüm SSK/Bağ-Kur aylıklarının toplamı dikkate alınır)."
+        )
+    onceki_en_dusuk = _donemler(int(_onceki_donem(donem).split("-")[0])).get(_onceki_donem(donem), {}).get("en_dusuk_aylik")
+    if asil is None and onceki_en_dusuk is not None and aylik == d(onceki_en_dusuk):
+        notlar.append(
+            f"Mevcut aylık önceki dönemin en düşük aylığına ({onceki_en_dusuk:.0f} TL) eşit; en düşük aylık "
+            "desteği alıyor olabilirsiniz. Öyleyse zam desteksiz asıl aylığa uygulanır: asil_aylik girin."
+        )
+    if notlar:
+        sonuc["not"] = " ".join(notlar)
     return sonuc
