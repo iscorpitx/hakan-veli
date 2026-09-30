@@ -19,7 +19,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 | `yillik_bordro` | 12 aylık bordro tablosu ve yıllık toplamlar |
 | `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan) |
 | `asgari_ucret` | Asgari ücretin brüt, net ve işveren maliyeti |
-| `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı, en düşük aylık tamamlaması dahil |
+| `emekli_zammi` | SSK / Bağ-Kur emeklisinin zamlı aylığı; en düşük aylık desteği alanlar için asıl aylık üzerinden hesap |
 | `memur_zammi` | Memur maaşı ve memur emeklisi (4/c) zammı |
 | `tis_zammi` | Belediye, kamu veya özel sektör işçisinin toplu sözleşme zammı: yeni brüt ve net |
 | `kamu_isci_protokolu` | Kamu işçisi çerçeve protokolü zam oranları |
@@ -36,6 +36,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 ## Örnek sorular
 
 - "Emekli aylığım 21.000 TL, Temmuz zammından sonra ne kadar olur?"
+- "En düşük emekli aylığını alıyorum (20.000 TL), asıl aylığım 15.000 TL. Temmuz'da ne alacağım?"
 - "Brüt 50.000 TL maaşın Ocak ve Aralık'taki neti ne?"
 - "Eline net 60.000 TL geçmesi için brüt kaç olmalı?"
 - "Asgari ücretli bir çalışanın işverene maliyeti ne?"
