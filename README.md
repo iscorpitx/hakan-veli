@@ -14,7 +14,7 @@ Yapay zekâ modelleri Türk vergi ve SGK hesaplarında sık hata yapar: vergi di
 
 | Araç | Ne yapar |
 |---|---|
-| `brutten_nete` | Brüt ücretten net ücret (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası); çalışan emekli (SGDP), engellilik indirimi ve BES dahil |
+| `brutten_nete` | Brüt ücretten net ücret (SGK, işsizlik, gelir ve damga vergisi, asgari ücret istisnası); çalışan emekli (SGDP), engellilik indirimi, BES ve sendika aidatı dahil |
 | `netten_brute` | İstenen net ücret için gereken brüt ücret |
 | `yillik_bordro` | 12 aylık bordro tablosu ve yıllık toplamlar |
 | `isveren_maliyeti` | Brüt ücretin işverene maliyeti (teşviksiz / 2 puan / imalat 5 puan / emekli çalışan SGDP) |
@@ -88,19 +88,22 @@ claude mcp add zam-hesap -- uvx --from git+https://github.com/iscorpitx/hakan-ve
 
 Hesaplar gerçek işyeri bordrolarıyla kalem kalem karşılaştırılmıştır (yalnızca tutarlar):
 
-| Kalem | Kasım 2023 bordro | zam-hesap | Ağustos 2026 bordro | zam-hesap |
-|---|---|---|---|---|
-| SGK işçi | 2.845,96 | 2.845,96 | 7.713,16 | 7.713,16 |
-| İşsizlik işçi | 203,28 | 203,28 | 550,94 | 550,94 |
-| Gelir vergisi (istisna sonrası) | 1.882,87 | 1.882,87 | 2.762,46 | 2.762,46 |
-| Damga vergisi (istisna sonrası) | 52,47 | 52,47 | 167,46 | 167,46 |
-| **Net ödenecek** | **15.343,72** | **15.343,72** | **43.900,00** | **43.900,00** |
+| Kalem | Kasım 2023 | Ağustos 2026 | 2026 kamu işçisi (sendikalı) |
+|---|---|---|---|
+| SGK işçi | 2.845,96 ✅ | 7.713,16 ✅ | 13.570,52 ✅ |
+| İşsizlik işçi | 203,28 ✅ | 550,94 ✅ | 969,32 ✅ |
+| Gelir vergisi (istisna sonrası) | 1.882,87 ✅ | 2.762,46 ✅ | 17.031,77 ✅ |
+| Damga vergisi (istisna sonrası) | 52,47 ✅ | 167,46 ✅ | 485,02 ✅ |
+| **Net ödenecek** | **15.343,72 ✅** | **43.900,00 ✅** | **62.370,31 ✅** |
+
+✅ = zam-hesap sonucu bordroyla kuruşu kuruşuna aynı.
 
 Kendi bordronuzu kontrol etmek için `brutten_nete` aracına şunları verin:
 - `brut`: bordrodaki **SGK matrahı** (ücret + yol parası gibi SGK'ya tabi ödemeler; ayni yemek hariç)
 - `ay` ve `yil`
 - `onceki_kumulatif_matrah`: "kümülatif gelir vergisi matrahı − bu ayın gelir vergisi matrahı"
 - `gv_istisna_tutari`: gelir vergisi matrahı "SGK matrahı − SGK işçi − işsizlik işçi"den düşükse aradaki fark (ör. yol yardımı istisnası)
+- `sendika_aidati`: bordrodaki sendika kesintisi (gelir vergisi matrahından düşülür)
 
 ## Desteklenen dönemler
 

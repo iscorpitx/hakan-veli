@@ -247,3 +247,27 @@ def test_ozel_durumlar_birlikte_ve_netten_brute():
     assert geri["brut"] == pytest.approx(60000, abs=0.02)
     yillik = maas.yillik_bordro(60000, 2026, sgdp=True, bes=True)
     assert yillik["yillik_toplam"]["bes_kesintisi"] == pytest.approx(60000 * 0.03 * 12, abs=0.01)
+
+
+def test_kamu_isci_bordrosu_2026_sendikali():
+    # İnternette yayımlanmış, kişisel bilgileri kapatılmış bir 2026 işçi bordrosu (yalnızca tutarlar).
+    # Bordro "6. ay" diye etiketli ama Temmuz'un asgari ücret istisnası (4.537,75) uygulanmış; bu yüzden ay=7.
+    # Bordroda SGK çalışan payı 13.570,32 yazıyor; kesintiler toplamı (57.583,37) ve net tutar 13.570,52'yi doğruluyor.
+    b = maas.brutten_nete(96932.26, 7, 2026, onceki_kumulatif_matrah=654308.43 - 79887.10, sendika_aidati=2505.32)
+    assert b["sgk_isci"] == 13570.52
+    assert b["issizlik_isci"] == 969.32
+    assert b["gelir_vergisi_matrahi"] == 79887.10  # sendika aidatı matrahtan düşülür
+    assert b["kumulatif_matrah"] == 654308.43
+    assert b["gelir_vergisi_istisnasi"] == 4537.75
+    assert b["odenecek_gelir_vergisi"] == 17031.77
+    assert b["odenecek_damga_vergisi"] == 485.02
+    assert b["net"] == 62370.31  # bordrodaki "net ödenen tutar"
+
+
+def test_sendika_aidati():
+    normal = maas.brutten_nete(60000, 1, 2026)
+    sendikali = maas.brutten_nete(60000, 1, 2026, sendika_aidati=1000)
+    assert sendikali["gelir_vergisi_matrahi"] == normal["gelir_vergisi_matrahi"] - 1000
+    assert sendikali["net"] == pytest.approx(normal["net"] - 1000 + 150, abs=0.01)  # %15 vergi avantajı
+    with pytest.raises(ValueError):
+        maas.brutten_nete(60000, 1, 2026, sendika_aidati=-5)

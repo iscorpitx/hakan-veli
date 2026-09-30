@@ -56,6 +56,7 @@ class Secenekler:
     sgdp: bool = False  # emekli olup çalışan (sosyal güvenlik destek primi)
     engellilik_derecesi: int | None = None  # 1, 2 veya 3
     bes: bool = False  # otomatik katılım BES kesintisi
+    sendika_aidati: Decimal = Decimal(0)  # gelir vergisi matrahından düşülür (GVK md. 63), netten kesilir
 
 
 def _sgk_kesintileri(
@@ -99,7 +100,7 @@ def _bordro_satiri(
     # SGK'ya tabi olup gelir vergisinden istisna tutarlar (ör. yol yardımı istisnası) ve engellilik
     # indirimi gelir vergisi matrahından düşülür.
     engellilik = _engellilik_indirimi(p, s.engellilik_derecesi)
-    gv_matrahi = max(Decimal(0), gv_matrahi - s.gv_istisna - engellilik)
+    gv_matrahi = max(Decimal(0), gv_matrahi - s.gv_istisna - engellilik - s.sendika_aidati)
     # Asgari ücretin o aya kadarki kümülatif matrahı (istisna hesabı için; her zaman normal SGK kesintisiyle)
     asgari_onceki = sum((_sgk_kesintileri(asgari_brut(p, a), a, p)[2] for a in range(1, ay)), Decimal(0))
     asgari_matrah = _sgk_kesintileri(asgari, ay, p)[2]
@@ -107,7 +108,7 @@ def _bordro_satiri(
     onceki_kumulatif = s.onceki_kumulatif
     if onceki_kumulatif is None:
         # Özel durumu olmayan asgari ücretli yıl boyunca asgari ücret almıştır; diğerleri için aynı brüt varsayılır.
-        standart_asgari = brut == asgari and not s.sgdp and not s.gv_istisna and not engellilik
+        standart_asgari = brut == asgari and not (s.sgdp or s.gv_istisna or engellilik or s.sendika_aidati)
         onceki_kumulatif = asgari_onceki if standart_asgari else gv_matrahi * (ay - 1)
     hesaplanan_gv = yuvarla(_aylik_vergi(onceki_kumulatif, gv_matrahi, dilimler))
     # Asgari ücrete isabet eden gelir vergisi istisnası (GVK 23/18)
@@ -121,7 +122,7 @@ def _bordro_satiri(
     odenecek_damga = hesaplanan_damga - damga_istisnasi
     # BES katkı payı prime esas kazançtan hesaplanır, netten kesilir ve vergi matrahını etkilemez.
     bes = yuvarla(_prim_matrahi(brut, ay, p) * d(p["bes"]["oran"])) if s.bes else Decimal(0)
-    net = brut - sgk_isci - issizlik_isci - odenecek_gv - odenecek_damga - bes
+    net = brut - sgk_isci - issizlik_isci - odenecek_gv - odenecek_damga - bes - s.sendika_aidati
 
     return {
         "ay": ay,
@@ -139,6 +140,7 @@ def _bordro_satiri(
         "damga_vergisi_istisnasi": damga_istisnasi,
         "odenecek_damga_vergisi": odenecek_damga,
         "bes_kesintisi": bes,
+        "sendika_aidati": s.sendika_aidati,
         "net": net,
     }
 
@@ -166,12 +168,17 @@ def _secenekler(
     sgdp: bool = False,
     engellilik_derecesi: int | None = None,
     bes: bool = False,
+    sendika_aidati: float = 0,
 ) -> Secenekler:
     if gv_istisna_tutari < 0:
         raise ValueError("gv_istisna_tutari negatif olamaz")
+    if sendika_aidati < 0:
+        raise ValueError("sendika_aidati negatif olamaz")
     if engellilik_derecesi is not None and engellilik_derecesi not in (1, 2, 3):
         raise ValueError("engellilik_derecesi 1, 2 veya 3 olmalı")
-    return Secenekler(_onceki(onceki_kumulatif_matrah), d(gv_istisna_tutari), sgdp, engellilik_derecesi, bes)
+    return Secenekler(
+        _onceki(onceki_kumulatif_matrah), d(gv_istisna_tutari), sgdp, engellilik_derecesi, bes, d(sendika_aidati)
+    )
 
 
 def brutten_nete(
@@ -183,6 +190,7 @@ def brutten_nete(
     sgdp: bool = False,
     engellilik_derecesi: int | None = None,
     bes: bool = False,
+    sendika_aidati: float = 0,
 ) -> dict[str, Any]:
     """Belirli bir ayın bordrosunu hesaplar.
 
@@ -193,6 +201,7 @@ def brutten_nete(
     sgdp: emekli olup çalışan (SGK yerine %7,5 SGDP, işsizlik primi yok).
     engellilik_derecesi: 1, 2 veya 3; aylık engellilik indirimi gelir vergisi matrahından düşülür.
     bes: otomatik katılım BES kesintisi (%3) netten düşülür.
+    sendika_aidati: aylık sendika aidatı; gelir vergisi matrahından düşülür ve netten kesilir.
     """
     _ay_kontrol(ay)
     p = yukle(yil)
@@ -200,7 +209,7 @@ def brutten_nete(
     asgari = asgari_brut(p, ay)
     if brut_d < asgari:
         raise ValueError(f"Brüt ücret, {p['yil']}/{ay} asgari brüt ücretinden ({asgari} TL) düşük olamaz")
-    s = _secenekler(onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
+    s = _secenekler(onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes, sendika_aidati)
     return {"yil": p["yil"], **_disari(_bordro_satiri(brut_d, ay, p, s))}
 
 
@@ -216,7 +225,8 @@ def yillik_bordro(
     s = _secenekler(sgdp=sgdp, engellilik_derecesi=engellilik_derecesi, bes=bes)
     aylar = [_bordro_satiri(d(brut), ay, p, s) for ay in range(1, 13)]
     toplam_alanlar = [
-        "brut", "sgk_isci", "issizlik_isci", "odenecek_gelir_vergisi", "odenecek_damga_vergisi", "bes_kesintisi", "net"
+        "brut", "sgk_isci", "issizlik_isci", "odenecek_gelir_vergisi", "odenecek_damga_vergisi", "bes_kesintisi",
+        "sendika_aidati", "net",
     ]
     toplam = {k: float(sum(a[k] for a in aylar)) for k in toplam_alanlar}
     return {"yil": p["yil"], "aylar": [_disari(a) for a in aylar], "yillik_toplam": toplam}
@@ -231,12 +241,13 @@ def netten_brute(
     sgdp: bool = False,
     engellilik_derecesi: int | None = None,
     bes: bool = False,
+    sendika_aidati: float = 0,
 ) -> dict[str, Any]:
     """İstenen aylık net ücrete karşılık gelen brüt ücreti bulur (ikili arama)."""
     _ay_kontrol(ay)
     p = yukle(yil)
     hedef = d(net)
-    s = _secenekler(onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes)
+    s = _secenekler(onceki_kumulatif_matrah, gv_istisna_tutari, sgdp, engellilik_derecesi, bes, sendika_aidati)
     alt = asgari_brut(p, ay)
     if _bordro_satiri(alt, ay, p, s)["net"] > hedef:
         raise ValueError("İstenen net ücret, asgari ücretin netinden düşük")
